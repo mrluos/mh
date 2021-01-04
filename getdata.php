@@ -953,7 +953,6 @@ function getAllZJ()
 }
 
 
-
 function getAllZJMaxImg()
 {
 
@@ -1040,5 +1039,69 @@ function getAllZJMaxImg()
 	}
 }
 
-getAllZJMaxImg();
+function getAllZJMaxImgEX($id)
+{
+
+	$db = new MH();
+	$all = $db->getAll('select * from mh_zj where manhua_id = ? order  by sort*1 desc', [$id]);
+	$total = 0;
+	foreach ($all as $k => $item) {
+		echo 'manhua_id:', $id, ' zhangjie:', $item['id'], ' start!!', "\r\n";
+		$l = explode('/', $item['dir_str']);
+		$l[3] = $item['cjid'];
+		$item['dir_str'] = implode('/', $l);
+//		$item['image'] = "/bookimages/15700/29651/eaa49764-a896-43af-9364-4f4630f43059.png";
+		preg_match('/(\..*)/si', $item['image'], $m);
+		$item['image_suffix'] = isset($m[0]) ? $m[0] : '';
+		$flag = 100;
+		$db->update('mh_zj', [
+			'dir_str' => $item['dir_str']
+		], ['id' => $item['id']]);
+		$init = 30;
+		$goOn = true;
+
+		$suffix = ($item['image_suffix'] ? $item['image_suffix'] : '');
+		$type = 0;
+		$picSuffix = ['', '.jpg', '.png', '.jpeg', '.gif'];
+		while (1) {
+			if (!isset($picSuffix[$type])) {
+				break;
+			}
+			$suffix = $picSuffix[$type];
+			$imgUrl = 'http://www.xiximh.vip/' . $item['dir_str'] . '1' . $suffix;
+			getimagesize($imgUrl, $rs);
+			if ($rs) {
+				break;
+			}
+			$type++;
+		}
+		echo ' pic suffix:', $suffix, "\r\n";
+		$picCount = 0;
+		while ($goOn) {
+
+			$imgUrl = 'http://www.xiximh.vip/' . $item['dir_str'] . $picCount . $suffix;
+			echo 'get img ', $imgUrl, "\r\n";
+			$rs = file_get_contents($imgUrl);
+			if (!$rs) {
+				if ($picCount == 0) {
+					$total++;
+					$picCount++;
+					continue;
+				}
+				$goOn = false;
+			}
+			if ($rs) {
+				$rs = file_put_contents('img/15271/' . $total . '.jpg', $rs);
+			}
+			$picCount++;
+			$total++;
+
+//			exit();
+
+		}
+	}
+}
+
+getAllZJMaxImgEX(15271);
+
 //$db->add();
