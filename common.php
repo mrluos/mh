@@ -1,0 +1,1039 @@
+<?php
+/**
+ * http post 请求
+ *
+ * @param  [string] $url        [description]
+ * @param  [string] $parameters [description]
+ * @param array $headers [description]
+ *
+ * @return [obj]             [description]
+ */
+function gf_http_post($url, $parameters = null, $headers = [], $upwd = '')
+{
+	return gf_http($url, 'post', $parameters, $headers, $upwd);
+}
+
+/**
+ * http get 请求
+ *
+ * @param  [string] $url        [description]
+ * @param  [string] $parameters [description]
+ * @param array $headers [description]
+ *
+ * @return [obj]             [description]
+ */
+function gf_http_get($url, $parameters = null, $headers = [], $upwd = '')
+{
+	return gf_http($url, 'get', $parameters, $headers, $upwd);
+}
+
+/**
+ * [gf_http description]
+ *
+ * @param  [type] $url        [description]
+ * @param  [type] $method     [description]
+ * @param  [type] $parameters [description]
+ * @param array $headers [Authorization验证的账号密码user:pwd格式]
+ * @param  [string] $upwd []
+ * @return [type]             [description]
+ */
+function gf_http($url, $method, $parameters = null, $headers = [], $upwd = '')
+{
+	if (empty($url)) {
+		return null;
+	}
+	$ci = curl_init();
+	/* Curl settings */
+	curl_setopt($ci, CURLOPT_HTTP_VERSION, CURL_HTTP_VERSION_1_0);
+	curl_setopt($ci, CURLOPT_RETURNTRANSFER, true);
+	curl_setopt($ci, CURLOPT_TIMEOUT, 3000);
+	curl_setopt($ci, CURLOPT_HEADER, false);
+	curl_setopt($ci, CURLOPT_SSL_VERIFYPEER, false); // 跳过证书检查
+	curl_setopt($ci, CURLOPT_SSL_VERIFYHOST, 2);     // 从证书中检查SSL加密算法是否存在
+	switch (strtolower($method)) {
+		case 'post':
+//			$urlParams = http_build_query($url);
+			$tmp = explode('?', $url);
+			if (isset($tmp[1])) {
+				parse_str($tmp[1], $postParame);
+				$parameters = array_merge($postParame, $parameters);
+			}
+			curl_setopt($ci, CURLOPT_POST, true);
+			if (!empty($parameters)) {
+				curl_setopt($ci, CURLOPT_POSTFIELDS, $parameters);
+			}
+//			exit;
+			break;
+		case 'get':
+			if (!empty($parameters)) {
+				$url .= strpos($url, '?') === false ? '?' : '';
+				$url .= strpos($url, '&') === false ? '' : '&';
+				$url .= http_build_query($parameters);
+			}
+			break;
+		default:
+			# code...
+			break;
+	}
+	if ('' != $upwd) {
+		curl_setopt($ci, CURLOPT_USERPWD, $upwd);
+	}
+	curl_setopt($ci, CURLOPT_URL, $url);
+	curl_setopt($ci, CURLOPT_HTTPHEADER, $headers);
+	curl_setopt($ci, CURLINFO_HEADER_OUT, true);
+	$response = curl_exec($ci);
+	if (curl_error($ci)) {
+		$response = curl_error($ci);
+	}
+	curl_close($ci);
+	return $response;
+}
+
+/**
+ * Yaf PDO class.
+ * @Author: Carl
+ * @Since: 2017/4/7 15:42
+ * Created by PhpStorm.
+ */
+class DbEXClass
+{
+	private static $dbLink;
+	private static $lastSql;
+	private static $lastInsertId;
+	private static $errMessage;
+	private static $linkMap;
+
+	public static function getInstance($dsn, $username, $password)
+	{
+		$opts = array(
+			PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION,
+			// Cancel one specific SQL mode option that RackTables has been non-compliant
+			// with but which used to be off by default until MySQL 5.7. As soon as
+			// respective SQL queries and table columns become compliant with those options
+			// stop changing @@SQL_MODE but still keep SET NAMES in place.
+			PDO::MYSQL_ATTR_INIT_COMMAND => 'SET NAMES "utf8", @@SQL_MODE = REPLACE(@@SQL_MODE, "NO_ZERO_DATE", "")',
+		);
+		if (!is_array(self::$linkMap)) {
+			self::$linkMap = array();
+		}
+		if (isset($pdo_bufsize)) {
+			$opts[PDO::MYSQL_ATTR_MAX_BUFFER_SIZE] = $pdo_bufsize;
+		}
+
+		if (isset($pdo_ssl_key)) {
+			$opts[PDO::MYSQL_ATTR_SSL_KEY] = $pdo_ssl_key;
+		}
+
+		if (isset($pdo_ssl_cert)) {
+			$opts[PDO::MYSQL_ATTR_SSL_CERT] = $pdo_ssl_cert;
+		}
+
+		if (isset($pdo_ssl_ca)) {
+			$opts[PDO::MYSQL_ATTR_SSL_CA] = $pdo_ssl_ca;
+		}
+
+		try {
+
+			self::$dbLink = self::getDBLink($dsn, $username, $password, $opts);
+			// var_dump($dsn, $username, $password, $opts);
+			// if(self::$dbLink===null){
+			//     // echo 'init...';
+			//     self::$dbLink = new PDO ($dsn, $username, $password, $opts);
+			// }
+		} catch (Exception $e) {
+			self::$errMessage = "Database connect failed:\n\n" . $e->getMessage();
+			die(self::$errMessage);
+		}
+		return self::$dbLink;
+	}
+
+	public static function changeDB($rs)
+	{
+		self::$dbLink = $rs;
+	}
+
+	private static function getDBLink($dsn, $username, $password, $opts)
+	{
+		$md5 = md5($dsn);
+		if (isset(self::$linkMap[$md5])) {
+			return self::$linkMap[$md5];
+		}
+		$rs = new PDO($dsn, $username, $password, $opts);
+		self::$linkMap[$md5] = $rs;
+		return $rs;
+
+	}
+
+	private static function checkDataType($val)
+	{
+
+		if (is_bool($val)) {
+			return PDO::PARAM_BOOL;
+		} elseif (is_numeric($val)) {
+			$test = $val * 1;
+			if (is_int($test)) {
+				return PDO::PARAM_INT;
+			}
+			return PDO::PARAM_STR;
+		} elseif (is_null($val)) {
+			return PDO::PARAM_NULL;
+		} else {
+			return PDO::PARAM_STR;
+		}
+
+	}
+
+	public static function isConnectOk()
+	{
+		return !!self::$dbLink;
+	}
+
+	public static function execute($sql, $param = array())
+	{
+		try {
+			$pre = self::$dbLink->prepare($sql);
+			foreach ($param as $key => $value) {
+				$pre->bindValue($key + 1, $value, self::checkDataType($value));
+			}
+			$pre->execute();
+			self::$lastSql = $pre->queryString;
+			//echo self::$lastSql;
+			return $pre;
+		} catch (PDOException $e) {
+			self::$errMessage = $e->getMessage();
+			die($e);
+		}
+	}
+
+	public static function insert($table, $columns)
+	{
+		$sql = " INSERT INTO {$table} (`" . implode('`, `', array_keys($columns));
+		$sql .= '`) VALUES (' . self::questionMarks(count($columns)) . ')';
+		// Now the query should be as follows:
+		// INSERT INTO table (c1, c2, c3) VALUES (?, ?, ?)
+		$res = self::execute($sql, array_values($columns))->rowCount();
+		if ($res > 0) {
+			return self::$dbLink->lastInsertId();
+		} else {
+			return false;
+		}
+	}
+
+	public static function ignore_insert($table, $columns)
+	{
+		$sql = " INSERT IGNORE INTO {$table} (`" . implode('`, `', array_keys($columns));
+		$sql .= '`) VALUES (' . self::questionMarks(count($columns)) . ')';
+		// Now the query should be as follows:
+		// INSERT INTO table (c1, c2, c3) VALUES (?, ?, ?)
+		$res = self::execute($sql, array_values($columns))->rowCount();
+		if ($res > 0) {
+			return self::$dbLink->lastInsertId();
+		} else {
+			return false;
+		}
+	}
+
+	/**
+	 * 插入多条语句
+	 * @Author:吴世聪
+	 * @param $table
+	 * @param $data 二维数组
+	 * @return bool
+	 * @throws WSException
+	 */
+	public static function inserts($table, $data)
+	{
+
+		$sql = ' INSERT INTO ' . $table . ' (`' . implode('`, `', array_keys($data[0])) . '`)';
+		$values = ' (' . self::questionMarks(count($data[0])) . ')';
+		$params = [];
+		foreach ($data as $key => $columns) {
+			if ($key === 0) {
+				$sql .= ' VALUES' . $values;
+			} else {
+				$sql .= ',' . $values;
+			}
+			$params = array_merge($params, array_values($columns));
+		}
+
+		$res = self::execute($sql, $params)->rowCount();
+
+		if ($res > 0) {
+			return self::$dbLink->lastInsertId();
+		} else {
+			return false;
+		}
+	}
+
+	public static function update($table, $param, $where, $conjunction = 'AND')
+	{
+		if (!count($param)) {
+			self::$errMessage = 'update must have set.';
+			die('update must have set.');
+		}
+		if (!count($where)) {
+			self::$errMessage = 'update must have where.';
+			die('update must have where.');
+		}
+		$whereValues = array();
+		$sql = " UPDATE $table SET " . self::makeSetSQL($param) . ' WHERE ' . self::makeWhereSQL($where, $conjunction, $whereValues);
+		return self::execute($sql, array_merge(array_values($param), $whereValues))->rowCount();
+	}
+
+	public static function delete($table, $where, $conjunction = 'AND')
+	{
+		if (!count($where)) {
+			self::$errMessage = 'delete must have where.';
+			die('delete must have where.');
+		}
+		$whereValues = array();
+		$sql = " DELETE FROM $table WHERE " . self::makeWhereSQL($where, $conjunction, $whereValues);
+		// print_r($sql);die;
+		return self::execute($sql, $whereValues)->rowCount();
+	}
+
+	/**
+	 * 开启事务
+	 * @return bool
+	 */
+	public static function begin()
+	{
+		return self::$dbLink->beginTransaction();
+	}
+
+	/**
+	 * 事务提交
+	 * @return bool
+	 */
+	public static function commit()
+	{
+		return self::$dbLink->commit();
+	}
+
+	/**
+	 * 事务回滚
+	 * @return bool
+	 */
+	public static function rollBack()
+	{
+		return self::$dbLink->rollBack();
+	}
+
+	public static function getColumn($sql, $param = array(), $col = 0)
+	{
+		return self::execute($sql, $param)->fetchColumn($col);
+	}
+
+	public static function getKeyValue($sql, $param = array())
+	{
+		return self::execute($sql, $param)->fetchAll(PDO::FETCH_KEY_PAIR);
+	}
+
+	public static function getCount($sql, $param = array())
+	{
+		return self::execute($sql, $param)->rowCount();
+	}
+
+	public static function getAll($sql, $param = array())
+	{
+		return self::execute($sql, $param)->fetchAll(PDO::FETCH_ASSOC);
+	}
+
+	public static function getRow($sql, $param = array())
+	{
+		return self::execute($sql, $param)->fetch(PDO::FETCH_ASSOC);
+	}
+
+	public static function makeSetSQL($columns)
+	{
+		if (!count($columns)) {
+			die('columns must not be empty');
+		}
+		$tmp = array();
+		// Same syntax works for NULL as well.
+		foreach ($columns as $col => $val) {
+			$tmp[] = "`${col}`=?";
+		}
+		return implode(', ', $tmp);
+	}
+
+	public static function makeWhereSQL($where_columns, $conjunction, &$params = array())
+	{
+		if (!in_array(strtoupper($conjunction), array('AND', '&&', 'OR', '||', 'XOR'))) {
+			die('conjunction' . $conjunction . 'invalid operator');
+		}
+		if (!count($where_columns)) {
+			return '';
+			// die ('where_columns must not be empty');
+		}
+		$params = array();
+		$tmp = array();
+		foreach ($where_columns as $colName => $colValue) {
+			if ($colValue === null) {
+				$tmp[] = "$colName IS NULL";
+			} elseif (is_array($colValue)) {
+				// Suppress any string keys to keep array_merge() from overwriting.
+				$params = array_merge($params, array_values($colValue));
+				$tmp[] = sprintf('%s IN(%s)', $colName, self::questionMarks(count($colValue)));
+			} else {
+				$tmp[] = "${colName}=?";
+				$params[] = $colValue;
+			}
+		}
+
+		return implode(" ${conjunction} ", $tmp);
+	}
+
+	public static function questionMarks($count)
+	{
+		if ($count <= 0) {
+			die('count must be greater than zero');
+		}
+		return implode(', ', array_fill(0, $count, '?'));
+	}
+
+	public static function getLastSQL()
+	{
+		return self::$lastSql;
+	}
+
+	public static function getLastInsertId()
+	{
+		return self::$dbLink->lastInsertId();
+	}
+
+	public static function getError()
+	{
+		return self::$errMessage;
+	}
+}
+
+class DbClass
+{
+	private $dbLink;
+
+	private $lastSql;
+	private $lastInsertId;
+	private $errMessage;
+
+
+	public function __construct($dsn, $username, $password)
+	{
+		$opts = array(
+			PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION,
+			// Cancel one specific SQL mode option that RackTables has been non-compliant
+			// with but which used to be off by default until MySQL 5.7. As soon as
+			// respective SQL queries and table columns become compliant with those options
+			// stop changing @@SQL_MODE but still keep SET NAMES in place.
+			PDO::MYSQL_ATTR_INIT_COMMAND => 'SET NAMES "utf8", @@SQL_MODE = REPLACE(@@SQL_MODE, "NO_ZERO_DATE", "")',
+		);
+		if (isset ($pdo_bufsize))
+			$opts[PDO::MYSQL_ATTR_MAX_BUFFER_SIZE] = $pdo_bufsize;
+		if (isset ($pdo_ssl_key))
+			$opts[PDO::MYSQL_ATTR_SSL_KEY] = $pdo_ssl_key;
+		if (isset ($pdo_ssl_cert))
+			$opts[PDO::MYSQL_ATTR_SSL_CERT] = $pdo_ssl_cert;
+		if (isset ($pdo_ssl_ca))
+			$opts[PDO::MYSQL_ATTR_SSL_CA] = $pdo_ssl_ca;
+		try {
+			$this->dbLink = new PDO ($dsn, $username, $password, $opts);
+		} catch (Exception $e) {
+			$this->errMessage = "Database connect failed:\n\n" . $e->getMessage();
+			die($this->errMessage);
+		}
+	}
+
+	public function isConnectOk()
+	{
+		return !!$this->dbLink;
+	}
+
+	private function checkDataType($val)
+	{
+
+		if (is_bool($val)) {
+			return PDO::PARAM_BOOL;
+		} elseif (is_numeric($val)) {
+			$test = $val * 1;
+			if (is_int($test)) {
+				return PDO::PARAM_INT;
+			}
+			return PDO::PARAM_STR;
+		} elseif (is_null($val)) {
+			return PDO::PARAM_NULL;
+		} else {
+			return PDO::PARAM_STR;
+		}
+
+	}
+
+	public function execute($sql, $param = array())
+	{
+		try {
+			$pre = $this->dbLink->prepare($sql);
+			foreach ($param as $key => $value) {
+				$pre->bindValue($key + 1, $value, $this->checkDataType($value));
+			}
+			$pre->execute();
+			$this->lastSql = $pre->queryString;
+			// echo $this->lastSql;
+			return $pre;
+		} catch (PDOException $e) {
+			$this->errMessage = $e->getMessage();
+			die($e);
+		}
+	}
+
+	public function insert($table, $columns)
+	{
+		$sql = " INSERT INTO {$table} (`" . implode('`, `', array_keys($columns));
+		$sql .= '`) VALUES (' . $this->questionMarks(count($columns)) . ')';
+		// Now the query should be as follows:
+		// INSERT INTO table (c1, c2, c3) VALUES (?, ?, ?)
+		$res = $this->execute($sql, array_values($columns))->rowCount();
+		if ($res > 0) {
+			return $this->dbLink->lastInsertId();
+		} else {
+			return FALSE;
+		}
+	}
+
+	public function update($table, $param, $where, $conjunction = 'AND')
+	{
+		if (!count($param)) {
+			$this->errMessage = 'update must have set.';
+			die('update must have set.');
+		}
+		if (!count($where)) {
+			$this->errMessage = 'update must have where.';
+			die('update must have where.');
+		}
+		$whereValues = array();
+		$sql = " UPDATE $table SET " . $this->makeSetSQL($param) . ' WHERE ' . $this->makeWhereSQL($where, $conjunction, $whereValues);
+		return $this->execute($sql, array_merge(array_values($param), $whereValues))->rowCount();
+	}
+
+	public function delete($table, $where, $conjunction = 'AND')
+	{
+		if (!count($where)) {
+			$this->errMessage = 'delete must have where.';
+			die('delete must have where.');
+		}
+		$whereValues = array();
+		$sql = " DELETE FROM $table WHERE " . $this->makeWhereSQL($where, $conjunction, $whereValues);
+		// print_r($sql);die;
+		return $this->execute($sql, $whereValues)->rowCount();
+	}
+
+	/**
+	 * 开启事务
+	 * @return bool
+	 */
+	public function begin()
+	{
+		return $this->dbLink->beginTransaction();
+	}
+
+	/**
+	 * 事务提交
+	 * @return bool
+	 */
+	public function commit()
+	{
+		return $this->dbLink->commit();
+	}
+
+	/**
+	 * 事务回滚
+	 * @return bool
+	 */
+	public function rollBack()
+	{
+		return $this->dbLink->rollBack();
+	}
+
+	public function getColumn($sql, $param = array(), $col = 0)
+	{
+		return $this->execute($sql, $param)->fetchColumn($col);
+	}
+
+	public function getKeyValue($sql, $param = array())
+	{
+		return $this->execute($sql, $param)->fetchAll(PDO::FETCH_KEY_PAIR);
+	}
+
+	public function getCount($sql, $param = array())
+	{
+		return $this->execute($sql, $param)->rowCount();
+	}
+
+	public function getAll($sql, $param = array())
+	{
+		return $this->execute($sql, $param)->fetchAll(PDO::FETCH_ASSOC);
+	}
+
+	public function getRow($sql, $param = array())
+	{
+		return $this->execute($sql, $param)->fetch(PDO::FETCH_ASSOC);
+	}
+
+	public function makeSetSQL($columns)
+	{
+		if (!count($columns)) {
+			die ('columns must not be empty');
+		}
+		$tmp = array();
+		// Same syntax works for NULL as well.
+		foreach ($columns as $col => $val) {
+			$tmp[] = "`${col}`=?";
+		}
+		return implode(', ', $tmp);
+	}
+
+	public function makeWhereSQL($where_columns, $conjunction, &$params = array())
+	{
+		if (!in_array(strtoupper($conjunction), array('AND', '&&', 'OR', '||', 'XOR'))) {
+			die ('conjunction' . $conjunction . 'invalid operator');
+		}
+		if (!count($where_columns)) {
+			die ('where_columns must not be empty');
+		}
+		$params = array();
+		$tmp = array();
+		foreach ($where_columns as $colName => $colValue)
+			if ($colValue === NULL)
+				$tmp[] = "$colName IS NULL";
+			elseif (is_array($colValue)) {
+				// Suppress any string keys to keep array_merge() from overwriting.
+				$params = array_merge($params, array_values($colValue));
+				$tmp[] = sprintf('%s IN(%s)', $colName, $this->questionMarks(count($colValue)));
+			} else {
+				$tmp[] = "${colName}=?";
+				$params[] = $colValue;
+			}
+		return implode(" ${conjunction} ", $tmp);
+	}
+
+	public function questionMarks($count)
+	{
+		if ($count <= 0) {
+			die('count must be greater than zero');
+		}
+		return implode(', ', array_fill(0, $count, '?'));
+	}
+
+	public function getLastSQL()
+	{
+		return $this->lastSql;
+	}
+
+	public function getLastInsertId()
+	{
+		return $this->dbLink->lastInsertId();
+	}
+
+	public function getError()
+	{
+		return $this->errMessage;
+	}
+
+	///*********tom*******///
+
+	/**
+	 * @param string $database 数据库名字
+	 * @param string $table 数据库表名
+	 * @return array 所有表的字段值
+	 */
+
+	public function getTableFields($database = '', $table = '')
+	{
+		//$column_name = $this -> getAll("select column_name from information_schema.`COLUMNS` where TABLE_SCHEMA='".$database."' and TABLE_NAME='".$table."'");
+		$column_name = $this->getAll("select column_name from information_schema.`COLUMNS` where TABLE_SCHEMA=? and TABLE_NAME=?", array($database, $table));
+		return $column_name;
+	}
+
+}
+
+class DbModel
+{
+	// table name
+	public $table = '';
+	// primary key
+	public $pk = 'id';
+
+	public $confName = 'mysql';
+	private $db;
+
+	public function __construct($table = '')
+	{
+//		mysql.dsn = "mysql:host=127.0.0.1;dbname=ws_cmdb;port=3306"
+//mysql.username = "root"
+//mysql.password = "123456"
+		$this->db = DBEXClass::getInstance('mysql:host=127.0.0.1;dbname=mh;port=3306', 'ws_cmdb', 'ws_cmdbwscmdb');
+		$this->table = empty($table) ? $this->table : $table;
+		if (empty($this->table)) {
+			$this->table = strtolower(str_replace('Model', '', get_class($this)));
+		}
+	}
+
+	public function getLinkRs()
+	{
+		return $this->db;
+	}
+
+	public function get($id)
+	{
+		DBEXClass::changeDB($this->db);
+		return DBEXClass::getRow("SELECT * FROM {$this->table} WHERE {$this->pk}=?", array($id));
+	}
+
+	/**
+	 * @param string $col
+	 * @param string $table
+	 * 查询表的字段
+	 * @return mixed
+	 */
+	public function getColInfo($col, $table = '')
+	{
+		if (empty($table)) {
+			$table = $this->table;
+		}
+		DBEXClass::changeDB($this->db);
+		return DBEXClass::getRow("SHOW COLUMNS FROM {$table} WHERE FIELD LIKE ?", array($col));
+	}
+
+	/**
+	 * @param string $col
+	 * @param string $table
+	 * 快速获取枚举类型列表
+	 * @return array
+	 */
+	public function getColEnum($col, $table = '')
+	{
+		$col_info = $this->getColInfo($col, $table);
+		$enum = explode(',', preg_replace('/^enum\((.*)\)$/i', '$1', $col_info['Type']));
+		return array_map(function ($v) {
+			return trim($v, '\'');
+		}, $enum);
+	}
+
+	public function add($data)
+	{
+		return $this->insert($this->table, $data);
+
+	}
+
+	public function insert($table, $data)
+	{
+		DBEXClass::changeDB($this->db);
+		return DBEXClass::insert($table, $data);
+	}
+
+	public function edit($id, $data)
+	{
+		return $this->mod($id, $data);
+	}
+
+	public function mod($id, $data)
+	{
+		DBEXClass::changeDB($this->db);
+		return DBEXClass::update($this->table, $data, array($this->pk => $id));
+	}
+
+	public function set($ids, $field, $value)
+	{
+		DBEXClass::changeDB($this->db);
+		return DBEXClass::update($this->table, array($field => $value), array($this->pk => $ids));
+	}
+
+	public function update($table, $data = array(), $where = array(), $conjunction = 'AND')
+	{
+		DBEXClass::changeDB($this->db);
+		return DBEXClass::update($table, $data, $where, $conjunction);
+	}
+
+	public function execute($sql, $param = array())
+	{
+		DBEXClass::changeDB($this->db);
+		return DBEXClass::execute($sql, $param);
+	}
+
+	public function del($ids)
+	{
+		// DBEXClass::changeDB($this->db);
+		return $this->delete($this->table, array($this->pk => $ids));
+	}
+
+	public function delete($table, $param = array(), $join = 'AND')
+	{
+		DBEXClass::changeDB($this->db);
+		return DBEXClass::delete($table, $param, $join);
+	}
+
+	public function isConnectOk()
+	{
+		DBEXClass::changeDB($this->db);
+		return DBEXClass::isConnectOk();
+		// return !!self::$dbLink;
+	}
+
+	/**
+	 * 开启事务
+	 * @return bool
+	 */
+	public function begin()
+	{
+		DBEXClass::changeDB($this->db);
+		return DBEXClass::begin();
+	}
+
+	/**
+	 * 事务提交
+	 * @return bool
+	 */
+	public function commit()
+	{
+		DBEXClass::changeDB($this->db);
+		return DBEXClass::commit();
+	}
+
+	/**
+	 * 事务回滚
+	 * @return bool
+	 */
+	public function rollBack()
+	{
+		DBEXClass::changeDB($this->db);
+		return DBEXClass::rollBack();
+	}
+
+	public function getColumn($sql, $param = array(), $col = 0)
+	{
+		DBEXClass::changeDB($this->db);
+		return DBEXClass::getColumn($sql, $param, $col);
+	}
+
+	public function getKeyValue($sql, $param = array())
+	{
+		DBEXClass::changeDB($this->db);
+		return DBEXClass::getKeyValue($sql, $param);
+	}
+
+	public function getCount($sql, $param = array())
+	{
+		DBEXClass::changeDB($this->db);
+		return DBEXClass::getCount($sql, $param);
+	}
+
+	public function getAll($sql, $param = array())
+	{
+		DBEXClass::changeDB($this->db);
+		return DBEXClass::getAll($sql, $param);
+	}
+
+	public function getRow($sql, $param = array())
+	{
+		DBEXClass::changeDB($this->db);
+		return DBEXClass::getRow($sql, $param);
+	}
+
+	public function getLastSQL()
+	{
+		DBEXClass::changeDB($this->db);
+		return DBEXClass::getLastSQL();
+	}
+
+	public function getLastInsertId()
+	{
+		DBEXClass::changeDB($this->db);
+		return DBEXClass::getLastInsertId();
+	}
+
+	public function getError()
+	{
+		DBEXClass::changeDB($this->db);
+		return DBEXClass::getError();
+	}
+
+	/**
+	 * @param string $database 数据库名字
+	 * @param string $table 数据库表名
+	 * @return array 所有表的字段值
+	 */
+
+	public function getTableFields($database = '', $table = '')
+	{
+		//$column_name = $this -> getAll("select column_name from information_schema.`COLUMNS` where TABLE_SCHEMA='".$database."' and TABLE_NAME='".$table."'");
+		DBEXClass::changeDB($this->db);
+		$column_name = DBEXClass::getAll("select column_name from information_schema.`COLUMNS` where TABLE_SCHEMA=? and TABLE_NAME=?", array($database, $table));
+		return $column_name;
+	}
+
+}
+
+class MH extends DbModel
+{
+	public $table = 'mh';
+	public $tableZj = 'mh_zj';
+
+	//不需要模糊搜索字段
+	public function insert($table, $data)
+	{
+		return parent::insert($table, $data); // TODO: Change the autogenerated stub
+	}
+
+	public function getOne($id)
+	{
+		return $this->getAll('select * from ' . $this->table . ' where id = ?', [$id]);
+	}
+
+	public function getOneZJ($id)
+	{
+		return $this->getAll('select * from ' . $this->tableZj . ' where id = ?', [$id]);
+	}
+
+	public function getAllMH()
+	{
+		return $this->getAll('select * from ' . $this->table, []);
+	}
+}
+
+function getPage($page = 1)
+{
+	$db = new MH();
+//	$rs = gf_http_get('http://www.xiximh.vip/home/api/getpage/tp/1-vip-' . $page);
+//	$rs = gf_http_get('http://www.xiximh.vip/home/api/getpage/tp/1-competitive-' . $page);
+	$rs = gf_http_get('http://www.xiximh.vip/home/api/getpage/tp/1-newest-' . $page);
+
+	$rs = json_decode($rs, true);
+
+	if ($rs['code'] == 1) {
+		$list = $rs['result']['list'];
+		var_dump($page, count($list));
+		foreach ($list as $item) {
+			if (empty($db->getOne($item['id']))) {
+				$db->add($item);
+			}
+
+		}
+		if ($rs['result']['lastPage'] == false) {
+			getPage($page + 1);
+		}
+	}
+}
+
+//getPage(2);
+function getAllZJ()
+{
+
+	$db = new MH();
+	$all = $db->getAllMH();
+	foreach ($all as $item) {
+		$rs = gf_http_get('http://www.xiximh.vip/home/api/chapter_list/tp/' . $item['id'] . '-1-1-1000');
+
+		$rs = json_decode($rs, true);
+
+		if ($rs['code'] == 1) {
+			$list = $rs['result']['list'];
+			var_dump($item['id'], count($list));
+			foreach ($list as $i) {
+				if (isset($i['image'])) {
+					preg_match('/\/bookimages\/(\d+)\//si', $i['image'], $match);
+					if (isset($match[1])) {
+						$i['dir_str'] = '/bookimages/' . $match[1] . '/' . $i['id'] . '/';
+					}
+				}
+				if (empty($db->getOneZJ($i['id']))) {
+					$db->insert('mh_zj', $i);
+				}
+
+			}
+		}
+	}
+}
+
+function getAllZJMaxImg()
+{
+
+	$db = new MH();
+	$all = $db->getAll('select * from mh_zj');
+	foreach ($all as $k => $item) {
+		echo $item['id'], ' start!!', "\r\n";
+		if ($item['pic_count'] > 0) {
+			continue;
+		}
+		$l = explode('/', $item['dir_str']);
+		$l[3] = $item['cjid'];
+		$item['dir_str'] = implode('/', $l);
+//		$item['image'] = "/bookimages/15700/29651/eaa49764-a896-43af-9364-4f4630f43059.png";
+		preg_match('/(\..*)/si', $item['image'], $m);
+		$item['image_suffix'] = isset($m[0]) ? $m[0] : '';
+		$flag = 100;
+		$db->update('mh_zj', [
+			'dir_str' => $item['dir_str']
+		], ['id' => $item['id']]);
+		$init = 30;
+		$picCount = 30;
+		$goOn = true;
+
+		$suffix = ($item['image_suffix'] ? $item['image_suffix'] : '');
+		$type = 0;
+		$picSuffix = ['', '.jpg', '.png', '.jpeg', '.gif'];
+		while (1) {
+			if (!isset($picSuffix[$type])) {
+				break;
+			}
+			$suffix = $picSuffix[$type];
+			$imgUrl = 'http://www.xiximh.vip/' . $item['dir_str'] . '1' . $suffix;
+			getimagesize($imgUrl, $rs);
+			if ($rs) {
+				break;
+			}
+			$type++;
+		}
+		echo ' pic suffix:', $suffix, "\r\n";
+		while ($goOn) {
+
+			$imgUrl = 'http://www.xiximh.vip/' . $item['dir_str'] . $picCount . $suffix;
+			getimagesize($imgUrl, $rs);
+//			$rs = file_get_contents('http://www.xiximh.vip/' . $item['dir_str'] . $picCount . $item['image_suffix']);
+//			var_dump($imgUrl, $rs);
+			if ($picCount <= $init) {
+				if ($picCount == $init && $rs) {
+					$picCount += 2;
+					continue;
+				}
+				if ($picCount == 0) {
+					$goOn = false;
+					continue;
+				}
+				if (!$rs) {
+					$picCount -= 2;
+					continue;
+				}
+				if ($picCount < $init) {
+					$goOn = false;
+				}
+			} else {
+				if (!$rs) {
+					$goOn = false;
+					continue;
+				}
+				$picCount += 2;
+			}
+
+//			exit();
+
+		}
+		$imgUrl = 'http://www.xiximh.vip/' . $item['dir_str'] . $picCount . $suffix;
+		getimagesize($imgUrl, $rs);
+		if (!$rs) {
+			$picCount - 1;
+		}
+		$db->update('mh_zj', [
+			'image_suffix' => $suffix,
+			'pic_count' => $picCount - 1,
+		], ['id' => $item['id']]);
+		echo $item['id'], ',count:', $picCount - 1, "\r\n";
+	}
+}
