@@ -5,7 +5,7 @@ $id = $_GET['id'] ?? null;
 $db = new MH();
 $html = [];
 if ($id) {
-	$list = $db->getAll('select * from mh_zj', []);
+	$list = $db->getAll('select * from mh_zj where manhua_id =? order  by sort asc', [$id]);
 	foreach ($list as $ke => $val) {
 		if ($val['pic_count'] > 0) {
 			$l = array_fill(0, $val['pic_count'], 1);
