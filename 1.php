@@ -8,7 +8,7 @@ $html = [];
 if ($id) {
 //	$list = $db->getAll('select * from mh_zj where manhua_id =? order  by sort asc', [$id]);
 
-	$list = $db->getAll('select * from mh_zj where manhua_id =? order  by sort asc', [$id]);
+	$list = $db->getAll('select * from mh_zj where manhua_id =? order  by sort*1 asc', [$id]);
 
 //	$list = [$list[0]];
 	$ke = 0;
@@ -45,10 +45,10 @@ if ($id) {
 		}
 
 		if ($val) {
-			$append[] = '<a class="nav2" href="1.php?id=' . $val['manhua_id'] . '&cid=' . $val['id'] . '">上一页</a>';
+			$append[] = '<a class="nav2 prev" href="1.php?id=' . $val['manhua_id'] . '&cid=' . $val['id'] . '">上一页</a>';
 		}
 		if ($nextVal) {
-			$append[] = '<a class="nav2" href="1.php?id=' . $nextVal['manhua_id'] . '&cid=' . $nextVal['id'] . '">下一页</a>';
+			$append[] = '<a class="nav2 next" href="1.php?id=' . $nextVal['manhua_id'] . '&cid=' . $nextVal['id'] . '">下一页</a>';
 		}
 		$html = array_merge($append, $html);
 	} else {
@@ -88,6 +88,19 @@ echo <<<EOF
 		}
 		.nav2.title{
 			display: block;
+		}
+		.nav2.next{
+			position: fixed;
+			top:50%;
+			right: 0;
+			width:100px
+		}
+		.nav2.prev{
+		top:50%;
+			position: fixed;
+			left:0;
+			width:100px
+			
 		}
 	</style>
 </head>
