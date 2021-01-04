@@ -1037,3 +1037,87 @@ function getAllZJMaxImg()
 		echo $item['id'], ',count:', $picCount - 1, "\r\n";
 	}
 }
+
+function getAllZJEx($id)
+{
+
+	$rs = gf_http_get('http://www.xiximh.vip/home/api/chapter_list/tp/' . $id . '-1-1-1000');
+
+	$rs = json_decode($rs, true);
+	$list = [];
+	if ($rs['code'] == 1) {
+		$list = $rs['result']['list'];
+		foreach ($list as $k => $i) {
+			if (isset($i['image'])) {
+				preg_match('/\/bookimages\/(\d+)\//si', $i['image'], $match);
+				if (isset($match[1])) {
+					$i['dir_str'] = '/bookimages/' . $match[1] . '/' . $i['cjid'] . '/';
+				}
+			}
+			$list[$k] = $i;
+
+		}
+	}
+	return $list;
+}
+
+function getPicCount($item, $picCount = 30)
+{
+//	print_r($item);
+	$type = 0;
+	$picSuffix = ['', '.jpg', '.png', '.jpeg', '.gif'];
+	$suffix = '';
+	while (1) {
+		if (!isset($picSuffix[$type])) {
+			break;
+		}
+		$suffix = $picSuffix[$type];
+		$imgUrl = 'http://www.xiximh.vip/' . $item['dir_str'] . '1' . $suffix;
+		getimagesize($imgUrl, $rs);
+		if ($rs) {
+			break;
+		}
+		$type++;
+	}
+	$init = 30;
+//	$picCount = 30;
+	$goOn = true;
+	while ($goOn) {
+		$imgUrl = 'http://www.xiximh.vip/' . $item['dir_str'] . $picCount . $suffix;
+		getimagesize($imgUrl, $rs);
+//			$rs = file_get_contents('http://www.xiximh.vip/' . $item['dir_str'] . $picCount . $item['image_suffix']);
+//			var_dump($imgUrl, $rs);
+		if ($picCount <= $init) {
+			if ($picCount == $init && $rs) {
+				$picCount += 2;
+				continue;
+			}
+			if ($picCount == 0) {
+				$goOn = false;
+				continue;
+			}
+			if (!$rs) {
+				$picCount -= 2;
+				continue;
+			}
+			if ($picCount < $init) {
+				$goOn = false;
+			}
+		} else {
+			if (!$rs) {
+				$goOn = false;
+				continue;
+			}
+			$picCount += 2;
+		}
+
+//			exit();
+
+	}
+	$imgUrl = 'http://www.xiximh.vip/' . $item['dir_str'] . $picCount . $suffix;
+	getimagesize($imgUrl, $rs);
+	if (!$rs) {
+		$picCount - 1;
+	}
+	return $picCount;
+}

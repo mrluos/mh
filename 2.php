@@ -2,30 +2,29 @@
 include_once './common.php';
 $id = $_GET['id'] ?? null;
 $cid = $_GET['cid'] ?? null;
+$getpage = $_GET['getpage'] ?? null;
+
 
 $db = new MH();
 $html = [];
 if ($id) {
 //	$list = $db->getAll('select * from mh_zj where manhua_id =? order  by sort asc', [$id]);
 
-	$list = $db->getAll('select * from mh_zj where manhua_id =? order  by sort*1 asc', [$id]);
-
+	$list = getAllZJEx($id);
+//	print_r($list);
+//	exit();
 //	$list = [$list[0]];
 	$ke = 0;
 	foreach ($list as $k1 => $val) {
 		if (!$cid) {
-			$html[] = '<a class="nav2 title" href="1.php?id=' . $val['manhua_id'] . '&cid=' . $val['id'] . '">' . $val['title'] . '</a>';
+			$html[] = '<a class="nav2 title" href="2.php?id=' . $val['manhua_id'] . '&cid=' . $val['id'] . '">' . $val['title'] . '</a>';
 		}
 		if ($cid != $val['id']) {
 			continue;
 		}
 		$ke = $k1;
-		$html[] = '<a class="nav2" href="1.php?id=' . $val['manhua_id'] . '&cid=' . $val['id'] . '">' . $val['title'] . '</a>';
-
-		if ($val['pic_count'] == 0) {
-			$val['pic_count'] = 10;
-		}
-		$l = array_fill(0, $val['pic_count'], 1);
+		$html[] = '<a class="nav2" href="2.php?id=' . $val['manhua_id'] . '&cid=' . $val['id'] . '">' . $val['title'] . '</a>';;
+		$l = array_fill(0, 10, 1);
 		$suffix = $val['image_suffix'];
 		foreach ($l as $k => $v) {
 			$imgUrlBase = 'http://www.xiximh.vip/' . $val['dir_str'] . '@#@' . $suffix;
@@ -35,34 +34,39 @@ if ($id) {
 
 	}
 	if ($cid) {
+		if ($getpage) {
+			$c = getPicCount($list[$ke], 10);
+			echo json_encode($c);
+			exit;
+		}
 		$val = isset($list[$ke - 1]) ? $list[$ke - 1] : null;
 		$nextVal = isset($list[$ke + 1]) ? $list[$ke + 1] : null;
 		$append = [];
-		$append[] = '<a class="nav2" href="1.php">首页</a>';
+		$append[] = '<a class="nav2" href="2.php">首页</a>';
 		if ($cid) {
-			$append[] = '<a class="nav2" href="1.php?id=' . $id . '">返回</a>';
+			$append[] = '<a class="nav2" href="2.php?id=' . $id . '">返回</a>';
 		} else {
-			$append[] = '<a class="nav2" href="1.php?id=' . $id . '">返回</a>';
+			$append[] = '<a class="nav2" href="2.php?id=' . $id . '">返回</a>';
 		}
 
 		if ($val) {
-			$append[] = '<a class="nav2 prev" href="1.php?id=' . $val['manhua_id'] . '&cid=' . $val['id'] . '">上一页</a>';
+			$append[] = '<a class="nav2 prev" href="2.php?id=' . $val['manhua_id'] . '&cid=' . $val['id'] . '">上一页</a>';
 		}
 		if ($nextVal) {
-			$append[] = '<a class="nav2 next" href="1.php?id=' . $nextVal['manhua_id'] . '&cid=' . $nextVal['id'] . '">下一页</a>';
+			$append[] = '<a class="nav2 next" href="2.php?id=' . $nextVal['manhua_id'] . '&cid=' . $nextVal['id'] . '">下一页</a>';
 		}
 		$html = array_merge($append, $html);
 	} else {
 		$val = isset($list[$ke - 1]) ? $list[$ke - 1] : null;
 		$append = [];
-		$append[] = '<a class="nav2" href="1.php">首页</a>';
+		$append[] = '<a class="nav2" href="2.php">首页</a>';
 		$html = array_merge($append, $html);
 	}
 } else {
 	$list = $db->getAllMH();
 	$html = [];
 	foreach ($list as $ke => $val) {
-		$html[] = '<a class="catalog" href="1.php?id=' . $val['id'] . '">' . $val['title'] . '</a>';
+		$html[] = '<a class="catalog" href="2.php?id=' . $val['id'] . '">' . $val['title'] . '</a>';
 	}
 }
 
@@ -133,11 +137,10 @@ position: fixed;
 <script>
 $(function() {
   var count = 10;
-  
-  
+
   var url=$("img").data('base');
   $("button").on("click",function() {
-      var _img =[];
+        var _img =[];
       count +=10;
     for (var i = count-10;i<count;i++){
         var _url = url.replace('@#@',i);
