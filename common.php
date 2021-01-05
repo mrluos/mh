@@ -1060,7 +1060,38 @@ function getAllZJEx($id)
 	}
 	return $list;
 }
-
+/**
+ * 获取文件夹下文件的数量
+ * @param $url 传入一个url如：/apps/web
+ * @return int 返回文件数量
+ */
+function getFileNumber($url){
+	$num=0;
+	$arr = glob($url);
+	foreach ($arr as $v) {
+		if(is_file($v)) {
+			$num++;
+		}
+		else {
+			$num+=getFileNumber($v."/*");
+		}
+	}
+	return $num;
+}
+function getFileName($url){
+	$dir=[];
+	$arr = glob($url);
+	print_r($arr);
+	foreach ($arr as $v) {
+		if(is_file($v)) {
+			$dir[]=$v;
+		}
+		else {
+			$dir=array_merge($dir,getFileNumber($v."/*"));
+		}
+	}
+	return $dir;
+}
 function getPicCount($item, $picCount = 30)
 {
 //	print_r($item);

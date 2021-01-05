@@ -952,101 +952,76 @@ function getAllZJ()
 	}
 }
 
+function testForImgSuffix($locSuffix, $remoteDir = '', $testPic = '2')
+{
+	$suffix = ($locSuffix ? $locSuffix : '');
+	$count = 0;
+	$picSuffix = ['.jpg', '.png', '.jpeg', '.gif', ''];
+	$rs = null;
+	while (1) {
+		if (!isset($picSuffix[$count])) {
+			break;
+		}
+		$suffix = $picSuffix[$count];
 
-function getAllZJMaxImg()
+		$imgUrl = 'http://www.xiximh.vip/' . $remoteDir . $testPic . $suffix;
+		echo ' suffix test for ' . $suffix, ' ', $imgUrl, "\r\n";
+		$rs = file_get_contents($imgUrl);
+		if ($rs) {
+			break;
+		}
+		$count++;
+	}
+	if ($rs) {
+		$suffix = $picSuffix[$count];
+	} else {
+		$suffix = '';
+	}
+	return $suffix;
+}
+
+function updateImgSuffix()
 {
 
 	$db = new MH();
 	$all = $db->getAll('select * from mh_zj');
 	foreach ($all as $k => $item) {
-		echo $item['id'], ' start!!', "\r\n";
+
 		if ($item['pic_count'] > 0) {
 			continue;
 		}
-		$l = explode('/', $item['dir_str']);
-		$l[3] = $item['cjid'];
-		$item['dir_str'] = implode('/', $l);
-//		$item['image'] = "/bookimages/15700/29651/eaa49764-a896-43af-9364-4f4630f43059.png";
-		preg_match('/(\..*)/si', $item['image'], $m);
-		$item['image_suffix'] = isset($m[0]) ? $m[0] : '';
-		$flag = 100;
-		$db->update('mh_zj', [
-			'dir_str' => $item['dir_str']
-		], ['id' => $item['id']]);
-		$init = 30;
-		$picCount = 30;
-		$goOn = true;
-
-		$suffix = ($item['image_suffix'] ? $item['image_suffix'] : '');
-		$type = 0;
-		$picSuffix = ['', '.jpg', '.png', '.jpeg', '.gif'];
-		while (1) {
-			if (!isset($picSuffix[$type])) {
-				break;
-			}
-			$suffix = $picSuffix[$type];
-			$imgUrl = 'http://www.xiximh.vip/' . $item['dir_str'] . '1' . $suffix;
-			getimagesize($imgUrl, $rs);
-			if ($rs) {
-				break;
-			}
-			$type++;
-		}
+		echo $item['id'], ' start!!', "\r\n";
+		$suffix = testForImgSuffix($item['image_suffix'], $item['dir_str']);
 		echo ' pic suffix:', $suffix, "\r\n";
-		while ($goOn) {
-
-			$imgUrl = 'http://www.xiximh.vip/' . $item['dir_str'] . $picCount . $suffix;
-			getimagesize($imgUrl, $rs);
-//			$rs = file_get_contents('http://www.xiximh.vip/' . $item['dir_str'] . $picCount . $item['image_suffix']);
-//			var_dump($imgUrl, $rs);
-			if ($picCount <= $init) {
-				if ($picCount == $init && $rs) {
-					$picCount += 2;
-					continue;
-				}
-				if ($picCount == 0) {
-					$goOn = false;
-					continue;
-				}
-				if (!$rs) {
-					$picCount -= 2;
-					continue;
-				}
-				if ($picCount < $init) {
-					$goOn = false;
-				}
-			} else {
-				if (!$rs) {
-					$goOn = false;
-					continue;
-				}
-				$picCount += 2;
-			}
-
-//			exit();
-
-		}
-		$imgUrl = 'http://www.xiximh.vip/' . $item['dir_str'] . $picCount . $suffix;
-		getimagesize($imgUrl, $rs);
-		if (!$rs) {
-			$picCount - 1;
-		}
 		$db->update('mh_zj', [
-			'image_suffix' => $suffix,
-			'pic_count' => $picCount - 1,
+			'image_suffix' => $suffix
 		], ['id' => $item['id']]);
-		echo $item['id'], ',count:', $picCount - 1, "\r\n";
 	}
 }
 
-function getAllZJMaxImgEX($id)
+function getImgToLoc($id, $sonId = null)
 {
 
 	$db = new MH();
 	$all = $db->getAll('select * from mh_zj where manhua_id = ? order  by sort*1 desc', [$id]);
 	$total = 0;
 	foreach ($all as $k => $item) {
+		if ($sonId) {
+			if ($sonId !== $item['id']) {
+				continue;
+			}
+		}
 		echo 'manhua_id:', $id, ' zhangjie:', $item['id'], ' start!!', "\r\n";
+		$dirPath = 'img/' . $id . '/' . $item['id'];
+		if (!file_exists($dirPath)) {
+			@mkdir($dirPath, 777, true);
+		} else {
+			$dirList = scandir($dirPath);
+			print_r($dirList);
+			if (count($dirList) > 2) {
+				continue;
+			}
+		}
 		$l = explode('/', $item['dir_str']);
 		$l[3] = $item['cjid'];
 		$item['dir_str'] = implode('/', $l);
@@ -1059,26 +1034,10 @@ function getAllZJMaxImgEX($id)
 		], ['id' => $item['id']]);
 		$init = 30;
 		$goOn = true;
-
-		$suffix = ($item['image_suffix'] ? $item['image_suffix'] : '');
-		$type = 0;
-		$picSuffix = ['', '.jpg', '.png', '.jpeg', '.gif'];
-		while (1) {
-			if (!isset($picSuffix[$type])) {
-				break;
-			}
-			$suffix = $picSuffix[$type];
-			$imgUrl = 'http://www.xiximh.vip/' . $item['dir_str'] . '1' . $suffix;
-			getimagesize($imgUrl, $rs);
-			if ($rs) {
-				break;
-			}
-			$type++;
-		}
+		$suffix = testForImgSuffix($item['image_suffix'], $item['dir_str']);
 		echo ' pic suffix:', $suffix, "\r\n";
 		$picCount = 0;
 		while ($goOn) {
-
 			$imgUrl = 'http://www.xiximh.vip/' . $item['dir_str'] . $picCount . $suffix;
 			echo 'get img ', $imgUrl, "\r\n";
 			$rs = file_get_contents($imgUrl);
@@ -1091,17 +1050,39 @@ function getAllZJMaxImgEX($id)
 				$goOn = false;
 			}
 			if ($rs) {
-				$rs = file_put_contents('img/15271/' . $total . '.jpg', $rs);
+				$rs = file_put_contents('img/' . $id . '/' . $item['id'] . '/' . $picCount . '.jpg', $rs);
 			}
 			$picCount++;
 			$total++;
-
-//			exit();
-
 		}
 	}
 }
 
-getAllZJMaxImgEX(15271);
+function dispatch(&$args)
+{
+	print_r($args);
+	// script name
+	array_shift($args);
+	switch ($args[0]) {
+		case '1000':
+			getImgToLoc($args[1], $args[2]);
+			break;
+		case '2000':
+			updateImgSuffix();
+			break;
+		default:
+			die('Invalid Request');
+	}
+}
+
+function is_cli()
+{
+	return preg_match("/cli/i", php_sapi_name()) ? true : false;
+}
+
+is_cli() || die('Bad Request');
+
+dispatch($argv);
+//getAllZJMaxImgEX(14071);
 
 //$db->add();
