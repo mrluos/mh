@@ -1060,95 +1060,220 @@ function getAllZJEx($id)
 	}
 	return $list;
 }
+
 /**
  * 获取文件夹下文件的数量
  * @param $url 传入一个url如：/apps/web
  * @return int 返回文件数量
  */
-function getFileNumber($url){
-	$num=0;
+function getFileNumber($url)
+{
+	$num = 0;
 	$arr = glob($url);
 	foreach ($arr as $v) {
-		if(is_file($v)) {
+		if (is_file($v)) {
 			$num++;
-		}
-		else {
-			$num+=getFileNumber($v."/*");
+		} else {
+			$num += getFileNumber($v . "/*");
 		}
 	}
 	return $num;
 }
-function getFileName($url){
-	$dir=[];
+
+function getFileName($url)
+{
+	$dir = [];
 	$arr = glob($url);
 	print_r($arr);
 	foreach ($arr as $v) {
-		if(is_file($v)) {
-			$dir[]=$v;
-		}
-		else {
-			$dir=array_merge($dir,getFileNumber($v."/*"));
+		if (is_file($v)) {
+			$dir[] = $v;
+		} else {
+			$dir = array_merge($dir, getFileNumber($v . "/*"));
 		}
 	}
 	return $dir;
 }
-function getPicCount($item, $picCount = 30)
+
+function getPicCount($item, $suffix = '-1')
 {
-//	print_r($item);
-	$type = 0;
-	$picSuffix = ['', '.jpg', '.png', '.jpeg', '.gif'];
-	$suffix = '';
-	while (1) {
-		if (!isset($picSuffix[$type])) {
+	$remoteDir = $item['dir_str'];
+	if ($suffix == -1) {
+		$suffix = testForImgSuffix($item['image_suffix'], $item['dir_str']);
+	}
+	$testPic = 0;
+	$imgUrl = 'http://www.xiximh.vip/' . $remoteDir . $testPic . $suffix;
+	$startIndex = 1;
+	$rs = @file_get_contents($imgUrl);
+	if ($rs) {
+		$startIndex = 0;
+	}
+	$flag = true;
+	$step = 10;
+	$cur = $step;
+	$count = 0;
+	$map = [];
+	$falseFlag = false;
+	$lastV = 0;
+	do {
+		$imgUrl = 'http://www.xiximh.vip/' . $remoteDir . $cur . $suffix;
+		$rs = @file_get_contents($imgUrl);
+		$count++;
+//		$rs = false;
+
+//		$map[] = [$cur, $rs];
+		if ($rs) {
+			if ($falseFlag) {
+				break;
+			}
+			$lastV = $cur;
+			$cur += $step;
+
+		} else {
+			$falseFlag = true;
+			$s = intval(($cur - $lastV) / 2);
+			$s = $s <= 1 ? 1 : $s;
+			$cur -= $s;
+		}
+
+		if ($cur <= 0) {
+			$flag = false;
+		}
+		if ($cur <= 0) {
+			$cur = 0;
 			break;
 		}
-		$suffix = $picSuffix[$type];
-		$imgUrl = 'http://www.xiximh.vip/' . $item['dir_str'] . '1' . $suffix;
-		getimagesize($imgUrl, $rs);
+
+	} while ($flag);
+	return [$cur, $startIndex];
+//	echo $cur, ' ## ', $count, "##", $startIndex, "\r\n";
+//	print_r($map);
+}
+
+function testForImgSuffix($locSuffix, $remoteDir = '', $testPic = '2')
+{
+	$suffix = ($locSuffix ? $locSuffix : '');
+	$count = 0;
+	$picSuffix = ['.jpg', '.png', '.jpeg', '.gif', ''];
+	$rs = null;
+	while (1) {
+		if (!isset($picSuffix[$count])) {
+			break;
+		}
+		$suffix = $picSuffix[$count];
+
+		$imgUrl = 'http://www.xiximh.vip/' . $remoteDir . $testPic . $suffix;
+		$rs = @file_get_contents($imgUrl);
+		echo ' suffix test for [' . $suffix, '] ', $imgUrl, ' #----> ', boolval($rs) ? 'true' : 'false', "\r\n";
 		if ($rs) {
 			break;
 		}
-		$type++;
+		$count++;
 	}
-	$init = 30;
-//	$picCount = 30;
-	$goOn = true;
-	while ($goOn) {
-		$imgUrl = 'http://www.xiximh.vip/' . $item['dir_str'] . $picCount . $suffix;
-		getimagesize($imgUrl, $rs);
-//			$rs = file_get_contents('http://www.xiximh.vip/' . $item['dir_str'] . $picCount . $item['image_suffix']);
-//			var_dump($imgUrl, $rs);
-		if ($picCount <= $init) {
-			if ($picCount == $init && $rs) {
-				$picCount += 2;
-				continue;
-			}
-			if ($picCount == 0) {
-				$goOn = false;
-				continue;
-			}
-			if (!$rs) {
-				$picCount -= 2;
-				continue;
-			}
-			if ($picCount < $init) {
-				$goOn = false;
-			}
-		} else {
-			if (!$rs) {
-				$goOn = false;
-				continue;
-			}
-			$picCount += 2;
+	if ($rs) {
+		$suffix = $picSuffix[$count];
+	} else {
+		$suffix = '';
+	}
+	return $suffix;
+}
+
+function updateImgSuffix($page = 1, $pageSize = 100)
+{
+
+	$db = new MH();
+	$limit = '';
+	$offset = ($page - 1) * $pageSize;
+	$limit = " limit {$offset},{$pageSize}";
+	$all = $db->getAll('select * from mh_zj where image_start_index =-1 ' . $limit);
+	foreach ($all as $k => $item) {
+		if ($item['image_start_index'] != -1) {
+			continue;
 		}
-
-//			exit();
-
+		echo $item['id'], ' start!!', "\r\n";
+		$suffix = testForImgSuffix($item['image_suffix'], $item['dir_str']);
+		list($count, $index) = getPicCount($item, $suffix);
+//		echo ' pic suffix:', $suffix, "\r\n";
+		$db->update('mh_zj', [
+			'image_suffix' => $suffix,
+			'image_start_index' => $index,
+			'pic_count' => $count
+		], ['id' => $item['id']]);
+		echo "suffix[{$suffix}],index[{$index}],count[{$count}]", "\r\n";
 	}
-	$imgUrl = 'http://www.xiximh.vip/' . $item['dir_str'] . $picCount . $suffix;
-	getimagesize($imgUrl, $rs);
-	if (!$rs) {
-		$picCount - 1;
+}
+
+function getImgToLoc($id = null, $sonId = null, $page = 0, $pagesize = 0)
+{
+	$db = new MH();
+	$limit = '';
+	if ($page > 0) {
+		$offset = ($page - 1) * $pagesize;
+		$limit = " limit {$offset},{$pagesize}";
 	}
-	return $picCount;
+	if ($id == null) {
+
+		$all = $db->getAll('
+SELECT j.* FROM (SELECT * FROM mh ORDER BY pingfen*1 DESC ' . $limit . ' )AS t 
+JOIN mh_zj j ON j.manhua_id = t.id 
+', []);
+	} else {
+
+		$all = $db->getAll('select * from mh_zj where manhua_id = ? order  by sort*1 desc', [$id]);
+	}
+	$total = 0;
+	foreach ($all as $k => $item) {
+		if ($id == null) {
+			$id = $item['manhua_id'];
+		}
+		if ($sonId) {
+			if ($sonId !== $item['id']) {
+				continue;
+			}
+		}
+		echo 'manhua_id:', $id, ' zhangjie:', $item['id'], ' start!!', "\r\n";
+		$dirPath = 'img/' . $id . '/' . $item['id'];
+		if (!file_exists($dirPath)) {
+			@mkdir($dirPath, 777, true);
+		} else {
+			$dirList = scandir($dirPath);
+			print_r($dirList);
+			if (count($dirList) > 2) {
+				continue;
+			}
+		}
+		$l = explode('/', $item['dir_str']);
+		$l[3] = $item['cjid'];
+		$item['dir_str'] = implode('/', $l);
+//		$item['image'] = "/bookimages/15700/29651/eaa49764-a896-43af-9364-4f4630f43059.png";
+		preg_match('/(\..*)/si', $item['image'], $m);
+		$item['image_suffix'] = isset($m[0]) ? $m[0] : '';
+		$flag = 100;
+		$db->update('mh_zj', [
+			'dir_str' => $item['dir_str']
+		], ['id' => $item['id']]);
+		$init = 30;
+		$goOn = true;
+		$suffix = testForImgSuffix($item['image_suffix'], $item['dir_str']);
+		echo ' pic suffix:', $suffix, "\r\n";
+		$picCount = 0;
+		while ($goOn) {
+			$imgUrl = 'http://www.xiximh.vip/' . $item['dir_str'] . $picCount . $suffix;
+			echo 'get img ', $imgUrl, "\r\n";
+			$rs = @file_get_contents($imgUrl);
+			if (!$rs) {
+				if ($picCount == 0) {
+					$total++;
+					$picCount++;
+					continue;
+				}
+				$goOn = false;
+			}
+			if ($rs) {
+				$rs = file_put_contents('img/' . $id . '/' . $item['id'] . '/' . $picCount . '.jpg', $rs);
+			}
+			$picCount++;
+			$total++;
+		}
+	}
 }
