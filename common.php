@@ -1,4 +1,4 @@
-<?php
+﻿<?php
 /**
  * http post 请求
  *
@@ -894,7 +894,7 @@ class MH extends DbModel
 
 	public function getAllMH()
 	{
-		return $this->getAll('select * from ' . $this->table, []);
+		return $this->getAll('select * from ' . $this->table.' order by ticai desc', []);
 	}
 }
 

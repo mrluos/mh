@@ -1,4 +1,4 @@
-<?php
+﻿<?php
 include_once './common.php';
 $id = $_GET['id'] ?? null;
 $cid = $_GET['cid'] ?? null;
@@ -108,13 +108,21 @@ if ($id) {
 } else {
 	$list = $db->getAllMH();
 	$html = [];
+	$append=[];
 	foreach ($list as $ke => $val) {
 		$loc = 'false';
 		if (isset($ids[$val['id']])) {
 			$loc = 'true';
 		}
-		$html[] = '<a class="catalog ' . $loc . '" href="1.php?id=' . $val['id'] . '">' . $val['title'] . '</a>';
+		$imgBase = 'http://www.xiximh.vip/' . $val['cover'];
+		if($loc=='true'){
+			$append[] = '<a class="catalog ' . $loc . '" href="1.php?id=' . $val['id'] . '"><img class="img-cover hide" src="'.$imgBase .'"/>[ '.$val['id'].' ]' . $val['title'] . '</a>';
+		}else{
+			$html[] = '<a class="catalog ' . $loc . '" href="1.php?id=' . $val['id'] . '"><img class="img-cover hide" src="'.$imgBase .'"/>[ '.$val['id'].' ]' . $val['title'] . '</a>';
+		}
+		
 	}
+	$html =array_merge($append,$html);
 }
 
 $html = implode('', $html);
@@ -231,6 +239,9 @@ echo <<<EOF
 		.show{
 		bottom: 150px;
 		}
+.img{
+		bottom: 250px;
+		}
 		.hide{
 		display: none;
 		}
@@ -254,6 +265,7 @@ echo <<<EOF
 <div class="next">{$nextHtml}</div>
 
 </div>
+<div class="go-top img">img</div>
 <div class="go-top top">Top</div>
 <div class="go-top show">show</div>
 <script>
@@ -278,7 +290,15 @@ $(function() {
   $(".go-top.top").on("click",function(){
       $("body").scrollTop(0);
   });
-  var show =false;
+  $(".go-top.img").on("click",function(){
+       if(show1){
+            $(".img-cover").addClass('hide')
+        }else{
+            $(".img-cover").removeClass('hide')
+        }
+        show1 =!show1;
+  });
+  var show =false;  var show1 =true;
   $(".go-top.show").on("click",function() {
         if(show){
             $(".header").addClass('hide')
@@ -290,7 +310,7 @@ $(function() {
         show =!show;
   })
   $(".go-top.show").click();
-  
+$(".go-top.img").click();  
 })
 </script>
 </body>
