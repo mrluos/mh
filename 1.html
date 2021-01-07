@@ -128,7 +128,7 @@
 	}
 
 	.show {
-		bottom: 0px;
+		bottom: 160px;
 	}
 
 	.img {
@@ -177,66 +177,99 @@
 
 
 <div class="header">
-	<a href="1.php" class="footer-a home">首页</a>
-	<a class="foot-a">第1話-成為有錢人之後全變了</a>
+	Total:<span id="img-count"></span>/
+	load:<span id="img-load"></span>
 </div>
 <div id="body">
 
 </div>
-<!--<div class="footer">-->
-<!--	<div class="prev"></div>-->
-<!--	<div class="more">-->
-<!--		<a class="btn-more footer-a">更多</a>-->
-<!--	</div>-->
-<!--	<div class="go-back"><a class="footer-a" href="1.php?id=15671">返回</a></div>-->
-<!--	<div class="next"><a class="footer-a" href="1.php?id=15671&amp;cid=58061">下一页</a></div>-->
+<div class="footer">
 
-<!--</div>-->
+	<div class="prev"><a class="footer-a fun" id="prev" data-type="1" href="#">上一页</a></div>
+	<div class="next"><a class="footer-a fun" id="next" data-type="2" href="#">下一页</a></div>
+</div>
 <!--<div class="go-top img">img</div>-->
 <div class="go-top top">Top</div>
 <div class="go-top show">show</div>
 <div id="catalog-wrap">
-	<span class="close-wrap">X</span>;
+	<span class="close-wrap">X</span>
 </div>
+<img id="img-wrap" style="width: 1px;height: 1px;display: none">
 <script>
     $(function () {
         var url = window.location.href;
         var urlList = url.split('?id=');
-        $.ajax('1.php?getdata=1&id=' + urlList[1]).then(res => {
-            // console.log(res);
-            //
+        var imglen = 0;
+        var loadImg = 0;
+        var curIndex = 0
 
-            $('#body').html(res);
+        function getimg(_list) {
+            if (_list.length == 0) return;
+            imglen += _list.length * 1;
+            $("#img-count").html(imglen);
+            _list.map(res => {
+                $("img").attr('src', res).on('load', function () {
+                    loadImg++;
+                    $("#img-load").html(loadImg);
+                });
+            })
+        }
+
+        $(".footer-a.fun").on('click', function () {
+            console.log(curIndex);
+            var $this = $(this);
+            var type = $this.data('type') * 1;
+            if (type == 2) {
+                curIndex++
+
+            } else {
+                curIndex--;
+            }
+            displayImg(curIndex);
+        })
+        var allData = [];
+        $.ajax('1.php?getdata=1&id=' + urlList[1]).then(res => {
+            var data = JSON.parse(res);
+            // console.log(data);
+            var catalog = data.catalog;
+            allData = catalog;
+            // $('#body').html(res);
             var $h = [];
-            $("a.catalog").each((index, item) => {
-                var cur = $(item);
-                var title = cur.html();
-                $h.push('<a class="catalog-a-vr" data-id="' + cur.attr("id") + '" > ' + title + ' </a>');
+            catalog.map((item, index) => {
+                // console.log(index, item);
+                getimg(item.img);
+                $h.push('<a class="catalog-a-vr" data-index="' + index + '" > ' + item.item.title + ' </a>');
             });
             $("#catalog-wrap").append($h.join(''));
-
+            displayImg(0);
         })
-	    $(".close-wrap").on("click",function () {
+        $(".close-wrap").on("click", function () {
             $("#catalog-wrap").removeClass("show-wrap");
         })
+
+        function displayImg(_index) {
+
+            if (allData[_index]) {
+                curIndex = _index
+                console.log(curIndex);
+                var imgs = [];
+                allData[_index].img.map(res => {
+                    imgs.push('<img class="img-wrap" src="' + res + '"/>')
+                })
+                $("#body").html(imgs.join(''));
+            }
+
+        }
+
         $("body").on("click", ".catalog-a-vr", function (e) {
             console.log(e);
-			var $el =$(this);
-			var top=-1;
-			var $id=$el.data('id');
-            $("a.catalog").each((index, item) => {
-                var cur = $(item);
-                var id =cur.attr("id");
-                if($id==id){
-                    top= cur.offset().top
-                }
-
-            });
-            if(top!==-1){
-                $("body").scrollTop(top);
-            }
-            $("#catalog-wrap").addClass("show-wrap")
+            var $el = $(this);
+            var top = -1;
+            var index = $el.data('index');
+            displayImg(index);
+            $("#catalog-wrap").removeClass("show-wrap")
         });
+        displayImg(0);
         var count = 10;
 
         var url = $("img").data('base');

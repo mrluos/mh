@@ -12,6 +12,7 @@ $nextHtml = '';
 $titleHtml = '';
 $dirPath = 'img/';
 $ids = [];
+$getdataAry = [];
 if (file_exists($dirPath)) {
 	$dirList = scandir($dirPath);
 	foreach ($dirList as $item) {
@@ -37,7 +38,7 @@ if ($id) {
 		}
 	}
 //	$dirAry=getFileName($dirPath  );
-
+	$getdataAry['catalog'] = [];
 	foreach ($list as $k1 => $val) {
 		$addCls = 'false';
 		if (isset($sonIds[$val['id']])) {
@@ -79,10 +80,16 @@ if ($id) {
 		}
 		$imgUrlBase = $imgBase . '@#@' . $suffix;
 		$l = array_fill(0, $num, 1);
+		$imgs = [];
 		foreach ($l as $k => $v) {
 			$imgUrl = $imgBase . $k . $suffix;
+			$imgs[] = $imgUrl;
 			$html[] = '<img data-base="' . $imgUrlBase . '" class="img-wrap" src="' . $imgUrl . '"/>';
 		}
+		$getdataAry['catalog'][] = [
+			'item' => $val,
+			'img' => $imgs,
+		];
 
 	}
 	if ($cid) {
@@ -129,7 +136,9 @@ if ($id) {
 
 if ($getdata) {
 //	$html = array_slice($html, 0, 200);
-	exit(implode('', $html));
+	ob_clean();;
+	$rs=json_encode($getdataAry,1);
+	exit($rs);
 }
 $html = implode('', $html);
 
