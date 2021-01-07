@@ -1,0 +1,277 @@
+<html>
+<head></head>
+<body>&#65279;
+
+<script src="http://lib.sinaapp.com/js/jquery/1.7.2/jquery.min.js"></script>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0,maximum=1.0,minimum=1.0,user-scalable=0">
+<meta name="format-detection" content="telephone=no">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black">
+<style>
+	body {
+		margin: 0;
+		padding: 0;
+		overflow-x: hidden;
+	}
+
+	img {
+		width: 100%;
+		height: auto;
+		display: block;
+		margin: 0 auto;
+	}
+
+	.catalog {
+		display: block;
+	}
+
+	.nav2 {
+		width: 100%;
+		height: auto;
+		display: inline;
+		margin: 0 auto;
+		padding: 5px;
+	}
+
+	.nav2.title {
+		display: block;
+	}
+
+	.nav2.next {
+		padding: 20px;
+		position: fixed;
+		/* top: 50%; */
+		right: 0;
+		width: 100px;
+		bottom: 0;
+		z-index: 99;
+	}
+
+	.nav2.prev {
+		padding: 20px;
+		position: fixed;
+		/* top: 50%; */
+		left: 0;
+		width: 100px;
+		bottom: 0;
+		z-index: 99;
+
+	}
+
+	#body {
+		/*margin-bottom: 100px;*/
+		padding: 70px 0px;
+	}
+
+	.catalog {
+		display: block;
+		padding: 5px;
+		border-bottom: 1px solid #eaeaea;
+	}
+
+	.catalog.true {
+		color: red;
+	}
+
+	.header {
+		position: fixed;
+		padding: 15px;
+		background: #b12828;
+		width: 100%;
+		color: white;
+		top: 0;
+		display: flex;
+	}
+
+	.footer {
+		bottom: 0;
+		position: fixed;
+		display: flex;
+		background: #b12828;
+		width: 100%;
+		color: white;
+	}
+
+	.prev, .next, .more, .go-back {
+		flex: 1;
+		padding: 15px 0;
+		text-align: center;
+	}
+
+	.footer-a {
+		width: 100%;
+		display: block;
+		text-align: center;
+		color: white;
+		text-decoration: underline;
+	}
+
+	.home {
+		width: 50px;;
+	}
+
+	.header > .footer-a {
+		text-align: left;
+	}
+
+	.go-top {
+		position: fixed;
+		right: 5px;
+		bottom: 83px;
+		width: 60px;
+		height: 60px;
+		background: #d4cabd;
+		line-height: 55px;
+		text-align: center;
+		border-radius: 50%;
+	}
+
+	.show {
+		bottom: 0px;
+	}
+
+	.img {
+		bottom: 250px;
+	}
+
+	.hide {
+		display: none;
+	}
+
+	.show-wrap {
+		bottom: 0 !important;
+	}
+
+	div#catalog-wrap {
+		position: fixed;
+		bottom: -60%;
+		background: #fdfdfd;
+		/* width: 100%; */
+		left: 0;
+		height: 50%;
+		padding: 20px;
+		right: 0;
+		overflow: hidden;
+		border-top: 1px solid #ffffff;
+		box-shadow: 1px -1px 5px 3px #d0d0d0;
+		overflow-y: auto;
+	}
+
+	a.catalog-a-vr {
+		display: block;
+		padding: 5px;
+		font-size: 14px;
+		background: #b12828;
+		margin: 6px 0;
+		box-shadow: 1px 1px 2px #b12828;
+		color: #fff;
+	}
+
+	span.close-wrap {
+		width: 100%;
+		display: block;
+		text-align: right;
+	}
+</style>
+
+
+<div class="header">
+	<a href="1.php" class="footer-a home">首页</a>
+	<a class="foot-a">第1話-成為有錢人之後全變了</a>
+</div>
+<div id="body">
+
+</div>
+<!--<div class="footer">-->
+<!--	<div class="prev"></div>-->
+<!--	<div class="more">-->
+<!--		<a class="btn-more footer-a">更多</a>-->
+<!--	</div>-->
+<!--	<div class="go-back"><a class="footer-a" href="1.php?id=15671">返回</a></div>-->
+<!--	<div class="next"><a class="footer-a" href="1.php?id=15671&amp;cid=58061">下一页</a></div>-->
+
+<!--</div>-->
+<!--<div class="go-top img">img</div>-->
+<div class="go-top top">Top</div>
+<div class="go-top show">show</div>
+<div id="catalog-wrap">
+	<span class="close-wrap">X</span>;
+</div>
+<script>
+    $(function () {
+        var url = window.location.href;
+        var urlList = url.split('?id=');
+        $.ajax('1.php?getdata=1&id=' + urlList[1]).then(res => {
+            // console.log(res);
+            //
+
+            $('#body').html(res);
+            var $h = [];
+            $("a.catalog").each((index, item) => {
+                var cur = $(item);
+                var title = cur.html();
+                $h.push('<a class="catalog-a-vr" data-id="' + cur.attr("id") + '" > ' + title + ' </a>');
+            });
+            $("#catalog-wrap").append($h.join(''));
+
+        })
+	    $(".close-wrap").on("click",function () {
+            $("#catalog-wrap").removeClass("show-wrap");
+        })
+        $("body").on("click", ".catalog-a-vr", function (e) {
+            console.log(e);
+			var $el =$(this);
+			var top=-1;
+			var $id=$el.data('id');
+            $("a.catalog").each((index, item) => {
+                var cur = $(item);
+                var id =cur.attr("id");
+                if($id==id){
+                    top= cur.offset().top
+                }
+
+            });
+            if(top!==-1){
+                $("body").scrollTop(top);
+            }
+            $("#catalog-wrap").addClass("show-wrap")
+        });
+        var count = 10;
+
+        var url = $("img").data('base');
+        if (!url) {
+            $(".btn-more").remove();
+        }
+        $(".btn-more").on("click", function () {
+            var _img = [];
+            count += 10;
+            for (var i = count - 10; i < count; i++) {
+                var _url = url.replace('@#@', i);
+                _img.push('<img src="' + _url + '"/>')
+            }
+            _img = _img.join('');
+            $("#body").append(_img);
+        })
+        $(".go-top.top").on("click", function () {
+            $("body").scrollTop(0);
+        });
+        $(".go-top.img").on("click", function () {
+            if (show1) {
+                $(".img-cover").addClass('hide')
+            } else {
+                $(".img-cover").removeClass('hide')
+            }
+            show1 = !show1;
+        });
+        var show = false;
+        var show1 = true;
+        $(".go-top.show").on("click", function () {
+            $("#catalog-wrap").addClass("show-wrap")
+        })
+        $(".go-top.img").click();
+    })
+</script>
+
+</body>
+</html>

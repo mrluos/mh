@@ -2,6 +2,7 @@
 include_once './common.php';
 $id = $_GET['id'] ?? null;
 $cid = $_GET['cid'] ?? null;
+$getdata = $_GET['getdata'] ?? null;
 
 $db = new MH();
 $html = [];
@@ -43,9 +44,10 @@ if ($id) {
 			$addCls = 'true';
 		}
 		if (!$cid) {
-			$html[] = '<a class="catalog ' . $addCls . '" href="1.php?id=' . $val['manhua_id'] . '&cid=' . $val['id'] . '">' . $val['title'] . '</a>';
+			$html[] = '<a id="catalog-' . $val['id'] . '" class="catalog ' . $addCls . '" href="1.php?id=' . $val['manhua_id'] . '&cid=' . $val['id'] . '">' . $val['title'] . '</a>';
 		}
-		if ($cid != $val['id']) {
+
+		if ($cid != $val['id'] && !$getdata) {
 			continue;
 		}
 
@@ -70,7 +72,7 @@ if ($id) {
 				$suffix = '.jpg';
 				$imgBase = $locPath . '/';
 			} else {
-				$suffix='.jpg';
+				$suffix = '.jpg';
 //				print_r($val);
 				$num = 10;
 			}
@@ -108,24 +110,29 @@ if ($id) {
 } else {
 	$list = $db->getAllMH();
 	$html = [];
-	$append=[];
+	$append = [];
 	foreach ($list as $ke => $val) {
 		$loc = 'false';
 		if (isset($ids[$val['id']])) {
 			$loc = 'true';
 		}
 		$imgBase = 'http://www.xiximh.vip/' . $val['cover'];
-		if($loc=='true'){
-			$append[] = '<a class="catalog ' . $loc . '" href="1.php?id=' . $val['id'] . '"><img class="img-cover hide" src="'.$imgBase .'"/>[ '.$val['id'].' ]' . $val['title'] . '</a>';
-		}else{
-			$html[] = '<a class="catalog ' . $loc . '" href="1.php?id=' . $val['id'] . '"><img class="img-cover hide" src="'.$imgBase .'"/>[ '.$val['id'].' ]' . $val['title'] . '</a>';
+		if ($loc == 'true') {
+			$append[] = '<a class="catalog ' . $loc . '" href="1.php?id=' . $val['id'] . '"><img class="img-cover hide" src="' . $imgBase . '"/>[ ' . $val['id'] . ' ]' . $val['title'] . '</a>';
+		} else {
+			$html[] = '<a class="catalog ' . $loc . '" href="1.php?id=' . $val['id'] . '"><img class="img-cover hide" src="' . $imgBase . '"/>[ ' . $val['id'] . ' ]' . $val['title'] . '</a>';
 		}
-		
+
 	}
-	$html =array_merge($append,$html);
+	$html = array_merge($append, $html);
 }
 
+if ($getdata) {
+//	$html = array_slice($html, 0, 200);
+	exit(implode('', $html));
+}
 $html = implode('', $html);
+
 echo <<<EOF
 <html>
 <head>
