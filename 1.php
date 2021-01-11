@@ -78,6 +78,9 @@ if ($id) {
 				$num = 10;
 			}
 		}
+		if ($getdata && !$hasLoc) {
+			continue;
+		}
 		$imgUrlBase = $imgBase . '@#@' . $suffix;
 		$l = array_fill(0, $num, 1);
 		$imgs = [];

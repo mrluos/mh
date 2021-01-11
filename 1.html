@@ -119,10 +119,16 @@
 			bottom: 83px;
 			width: 60px;
 			height: 60px;
-			background: #d4cabd;
+			color: antiquewhite;
+			background: #b12828;
 			line-height: 55px;
 			text-align: center;
 			border-radius: 50%;
+		}
+
+		.go-top.load {
+			bottom: 283px;
+			background: #1f1f1ea1;
 		}
 
 		.show {
@@ -171,13 +177,105 @@
 			display: block;
 			text-align: right;
 		}
+
+		.img-wrap {
+			boder: 1px solid #f00
+		}
+
+		.load-rs-wrap {
+			position: fixed;
+			z-index: 9999;
+			color: antiquewhite;
+			background: #343c44ad;
+			width: 100%;
+			height: 100%;
+			top: 0;
+			left: 0;
+			transition: top 0.2s linear;
+		}
+
+		.load-rs-notice {
+			position: absolute;
+			top: 50%;
+			text-align: center;
+			width: 100%;
+			color: #e2afaf;
+			/*transition: top 0.2s linear;*/
+		}
+
+		.sm-rs-notice {
+			line-height: 40px;
+			text-align: center;
+			border-radius: 5px;
+			background: #b12828;
+			flex: 1;
+			color: white;
+			margin: 0 28px;;
+		}
+
+		.load-rs-wrap.small {
+			top: -100%;
+		}
+
+		.sm-rs-notice.save {
+			left: 30%;
+			background: #28b165;
+		}
+
+		.sm-rs-notice.small {
+			left: auto;
+			right: 0;
+			top: 0;
+			line-height: 51px;
+			position: fixed;
+			background: #b12828;
+		}
+
+		div#catalog-list {
+			background: white;
+			height: 50%;
+			overflow-y: auto;
+			padding: 12px;
+		}
+
+		.load-rs-info {
+			background: white;
+			overflow-y: auto;
+			padding: 12px 12px 0px 12px;
+			color: #343c44;
+			border-top: 1px solid #ffffff;
+			box-shadow: 1px -1px 5px 3px #d0d0d0;
+		}
+
+		.load-rs-cache {
+			display: flex;
+			background: white;
+			overflow-y: auto;
+			padding: 12px;
+			color: #00529a;
+			border-top: 1px solid #ffffff;
+			box-shadow: 1px -1px 5px 3px #d0d0d0;
+		}
+
+		.cache-all {
+			margin-top: 12px;
+			font-size: 16px;
+
+		}
+
+		.cache-all > input {
+			width: 16px;
+			height: 16px;
+		}
+
+		.load-rs-wrap.small {
+		}
 	</style>
 </head>
 <body>
 
 <div class="header">
-	Total:<span id="img-count"></span>/
-	load:<span id="img-load"></span>
+	<span id="title-p"></span>
 </div>
 <div id="body">
 
@@ -194,120 +292,232 @@
 	</div>
 </div>
 <!--<div class="go-top img">img</div>-->
+<div class="go-top load hide"></div>
 <div class="go-top top">Top</div>
-<div class="go-top show">show</div>
+<div class="go-top show">目录</div>
 <div id="catalog-wrap">
 	<span class="close-wrap">X</span>
+</div>
+<div class="load-rs-wrap small hide">
+	<div class="load-rs-info">
+		<div>
+			Total:<span id="img-count">0</span>---
+			load:<span id="img-load">0</span>
+		</div>
+		<div class="cache-all">
+			全选<input type="checkbox" id="cache-all">
+		</div>
+	</div>
+	<div class="catalog-list" id="catalog-list">
+
+	</div>
+	<div class="load-rs-cache">
+		<div class="sm-rs-notice save" data-type="save">Save</div>
+		<div class="sm-rs-notice small" data-type="show">Cache</div>
+	</div>
 </div>
 <img id="img-wrap" style="width: 1px;height: 1px;display: none">
 <script>
     $(function () {
-        var url = window.location.href;
-        var urlList = url.split('?id=');
-        var imglen = 0;
-        var loadImg = 0;
-        var curIndex = 0
+        try {
+            var url = window.location.href;
+            var urlList = url.split('?id=');
+            var imglen = 0;
+            var loadImg = 0;
+            var curIndex = 0
+            var allData = [];
+            var count = 10;
+            var show = false;
+            var show1 = true;
+            var chapter = {};
+            var $loadRat = $(".go-top.load");
 
-        function getimg(_list) {
-            if (_list.length == 0) return;
-            imglen += _list.length * 1;
-            $("#img-count").html(imglen);
-            _list.map(res => {
-                $("img").attr('src', res).on('load', function () {
-                    loadImg++;
-                    $("#img-load").html(loadImg);
-                });
-            })
-        }
-
-        $(".footer-a.fun").on('click', function () {
-            console.log(curIndex);
-            var $this = $(this);
-            var type = $this.data('type') * 1;
-            if (type == 2) {
-                curIndex++
-
-            } else {
-                curIndex--;
-            }
-            displayImg(curIndex);
-        })
-        var allData = [];
-        $.ajax('1.php?getdata=1&id=' + urlList[1]).then(res => {
-            var data = JSON.parse(res);
-            // console.log(data);
-            var catalog = data.catalog;
-            allData = catalog;
-            // $('#body').html(res);
-            var $h = [];
-            catalog.map((item, index) => {
-                // console.log(index, item);
-                getimg(item.img);
-                $h.push('<a class="catalog-a-vr" data-index="' + index + '" > ' + item.item.title + ' </a>');
-            });
-            $("#catalog-wrap").append($h.join(''));
-            displayImg(0);
-        })
-        $(".close-wrap").on("click", function () {
-            $("#catalog-wrap").removeClass("show-wrap");
-        })
-
-        function displayImg(_index) {
-
-            if (allData[_index]) {
-                curIndex = _index
-                console.log(curIndex);
-                var imgs = [];
-                allData[_index].img.map(res => {
-                    imgs.push('<img class="img-wrap" src="' + res + '"/>')
+            function initPage(id) {
+                $.ajax('1.php?getdata=1&id=' + id).then(res => {
+                    $(".load-rs-wrap").removeClass('hide');
+                    var data = JSON.parse(res);
+                    // console.log(data);
+                    var catalog = data.catalog;
+                    allData = catalog;
+                    // $('#body').html(res);
+                    var $h = [];
+                    var $h2 = [];
+                    catalog.map((item, index) => {
+                        // console.log(index, item);
+                        // cacheChapter(item.img);
+                        $h.push('<a class="catalog-a-vr" data-index="' + index + '" data-type="1"> ' + item.item.title + ' </a>');
+                        $h2.push('<a class="catalog-a-vr checkbox" data-index="' + index + '" data-type="2" ><input type="checkbox"> ' + item.item.title + ' </a>');
+                    });
+                    $("#catalog-list").append($h2.join(''))
+                    $("#catalog-wrap").append($h.join(''));
+                    displayImg(0);
                 })
-                $("#body").html(imgs.join(''));
+
             }
 
+            function cacheSelectImg() {
+                var $ids = [];
+                $(".catalog-a-vr.checkbox").each((index, item) => {
+                    if ($(item).find('input').prop('checked')) {
+                        $ids.push($(item).data("index"))
+                    }
+                })
+                if ($ids.length > 0) {
+                    setTimeout(() => {
+                        $ids.map(res => {
+                            cacheChapter(allData[res].img);
+                        })
+                    }, 350)
+                }
+            }
+
+            function caculateRate() {
+                loadImg = loadImg * 1;
+                if (loadImg >= 0 && imglen > 0) {
+                    $loadRat.removeClass('hide')
+                    $loadRat.html((loadImg / imglen * 100).toFixed(0, 10) + '%')
+                }
+                if (loadImg == imglen) {
+                    $loadRat.addClass('hide')
+                }
+            }
+
+            function getOneImg(_url, _cb, _errorCb) {
+                var i = new Image();
+                i.onload = _cb;
+                i.onerror = _errorCb;
+                i.src = _url;
+            }
+
+            function cacheChapter(_list) {
+                if (_list.length == 0) return;
+                imglen += _list.length * 1;
+                $("#img-count").html(imglen);
+                _list.map(res => {
+                    getOneImg(res, () => {
+                        loadImg++;
+                        $("#img-load").html(loadImg);
+                        caculateRate()
+                    }, () => {
+                        loadImg--;
+                        $("#img-load").html(loadImg);
+                        caculateRate()
+                    })
+                    // $("img").attr('src', res).on('load', function () {
+                    //     loadImg++;
+                    //     $("#img-load").html(loadImg);
+                    // });
+                })
+            }
+
+            function displayImg(_index) {
+
+                if (allData[_index]) {
+                    curIndex = _index
+                    console.log(curIndex);
+                    var imgs = [];
+                    allData[_index].img.map(res => {
+                        imgs.push('<img class="img-wrap" src="' + res + '"/>')
+                    })
+                    $("#title-p").html(allData[_index].item['title']);
+                    $("#body").html(imgs.join(''));
+                }
+
+            }
+
+            $(".sm-rs-notice").on("click", function () {
+                var $this = $(this);
+                var type = $this.data('type')
+                if ($this.hasClass('small')) {
+                    $('.load-rs-wrap').removeClass('small');
+                    $this.removeClass('small');
+                    $this.html('Small')
+                } else {
+                    $('.load-rs-wrap').addClass('small');
+                    $this.addClass('small');
+                    $this.html('Cache')
+                }
+                if (type == 'save') {
+                    cacheSelectImg();
+                }
+            })
+            $(".footer-a.fun").on('click', function () {
+                console.log(curIndex);
+                var $this = $(this);
+                var type = $this.data('type') * 1;
+                if (type == 2) {
+                    curIndex++
+
+                } else {
+                    curIndex--;
+                }
+                displayImg(curIndex);
+            })
+            $(".close-wrap").on("click", function () {
+                $("#catalog-wrap").removeClass("show-wrap");
+            })
+            $("#cache-all").on("click", function () {
+
+                var $this = $(this);
+                console.log($this.prop('checked'))
+                if ($this.prop('checked')) {
+                    $(".catalog-a-vr.checkbox").each((index, item) => {
+                        $(item).find('input').prop('checked', true);
+                    })
+                } else {
+                    $(".catalog-a-vr.checkbox").each((index, item) => {
+                        $(item).find('input').prop('checked', false);
+                    })
+                }
+            })
+            $(".btn-more").on("click", function () {
+                var _img = [];
+                count += 10;
+                for (var i = count - 10; i < count; i++) {
+                    var _url = url.replace('@#@', i);
+                    _img.push('<img src="' + _url + '"/>')
+                }
+                _img = _img.join('');
+                $("#body").append(_img);
+            })
+            $(".go-top.top").on("click", function () {
+                $("body").scrollTop(0);
+            });
+            $(".go-top.img").on("click", function () {
+                if (show1) {
+                    $(".img-cover").addClass('hide')
+                } else {
+                    $(".img-cover").removeClass('hide')
+                }
+                show1 = !show1;
+            });
+            $(".go-top.show").on("click", function () {
+                $("#catalog-wrap").addClass("show-wrap")
+            })
+            $("body").on("click", ".catalog-a-vr", function (e) {
+
+                console.log(e);
+                var $el = $(this);
+                var top = -1;
+                var index = $el.data('index');
+                var type = $el.data('type')
+                if (type == '1') {
+                    displayImg(index);
+                    $("#catalog-wrap").removeClass("show-wrap")
+                } else {
+                    var $checkIpt = $(this).find('input');
+
+                    if ($checkIpt.prop('checked')) {
+                        $checkIpt.prop('checked', false);
+                    } else {
+                        $checkIpt.prop('checked', true);
+                    }
+                }
+            });
+            initPage(urlList[1]);
+        } catch (e) {
+            alert(e);
         }
-
-        $("body").on("click", ".catalog-a-vr", function (e) {
-            console.log(e);
-            var $el = $(this);
-            var top = -1;
-            var index = $el.data('index');
-            displayImg(index);
-            $("#catalog-wrap").removeClass("show-wrap")
-        });
-        displayImg(0);
-        var count = 10;
-
-        // var url = $("img").data('base');
-        // if (!url) {
-        //     $(".btn-more").remove();
-        // }
-        $(".btn-more").on("click", function () {
-            var _img = [];
-            count += 10;
-            for (var i = count - 10; i < count; i++) {
-                var _url = url.replace('@#@', i);
-                _img.push('<img src="' + _url + '"/>')
-            }
-            _img = _img.join('');
-            $("#body").append(_img);
-        })
-        $(".go-top.top").on("click", function () {
-            $("body").scrollTop(0);
-        });
-        $(".go-top.img").on("click", function () {
-            if (show1) {
-                $(".img-cover").addClass('hide')
-            } else {
-                $(".img-cover").removeClass('hide')
-            }
-            show1 = !show1;
-        });
-        var show = false;
-        var show1 = true;
-        $(".go-top.show").on("click", function () {
-            $("#catalog-wrap").addClass("show-wrap")
-        })
-        $(".go-top.img").click();
     })
 </script>
 
