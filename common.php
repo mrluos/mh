@@ -894,7 +894,7 @@ class MH extends DbModel
 
 	public function getAllMH()
 	{
-		return $this->getAll('select * from ' . $this->table.' order by ticai desc', []);
+		return $this->getAll('select * from ' . $this->table . ' order by ticai desc', []);
 	}
 }
 
@@ -1231,6 +1231,7 @@ JOIN mh_zj j ON j.manhua_id = t.id
 				continue;
 			}
 		}
+
 		echo 'manhua_id:', $id, ' zhangjie:', $item['id'], ' start!!', "\r\n";
 		$dirPath = 'img/' . $id . '/' . $item['id'];
 		if (!file_exists($dirPath)) {
@@ -1241,6 +1242,18 @@ JOIN mh_zj j ON j.manhua_id = t.id
 			if (count($dirList) > 2) {
 				continue;
 			}
+		}
+		if ($item['type'] == 100) {
+			$url = str_replace('//manga', '/manga', $item['dir_str']);
+			if ($item['id'] == '') {
+				$db->update('mh_zj', [
+					'dir_str' => $url,
+					'id' => $k + 1 + ($item['manhua_id'] + 1),
+				], ['title' => $item['title']]);
+			}
+			getType100Img($item, 'img/' . $id . '/' . $item['id'] . '/');
+
+			continue;
 		}
 		$l = explode('/', $item['dir_str']);
 		$l[3] = $item['cjid'];
@@ -1276,4 +1289,100 @@ JOIN mh_zj j ON j.manhua_id = t.id
 			$total++;
 		}
 	}
+}
+
+function getMHByHZW()
+{
+
+	$db = new MH();
+	$rs = $db->getAll('select max(id)as max from mh ;', []);
+	$max = $rs[0]['max'];
+
+	$url = 'http://www.hanhande.net/manga/94/';
+	$content = file_get_contents($url);
+	preg_match_all('/\<li\>(.*?)\<\/li\>/six', $content, $matchs);
+//	print_r($matchs[1]);exit;
+	$all = [];
+
+	foreach ($matchs[1] as $key => $val) {
+		$val = trim($val);
+//		var_dump($val);
+		preg_match_all('/\<a.*?href=\"(.*?)\".*?\>.*?\<\/a\>/six', $val, $a);
+
+		if (isset($a[1][0])) {
+//			print_r($a[1][0]);
+//			echo "\r\n";
+			if (is_string($a[1][0]) && preg_match('/^\/manga\/.*?\.html/six', $a[1][0])) {
+				$zj = $a[1][0];
+//				echo "#---------------------------------------------------------#\r\n";
+//				print_r($a[0][0]);
+//				echo "\r\n----\r\n";
+				preg_match('/\<span\>(.*?)\<\/span\>/six', $a[0][0], $rs);
+//				print_r($zj);
+//				echo "\r\n----\r\n";
+//				print_r($rs);
+				if (isset($rs[1])) {
+					$all[] = ['name' => $rs[1], 'url' => 'http://www.hanhande.net/' . $zj];
+				}
+//				echo "\r\n";
+//				exit;
+			}
+		}
+	}
+	print_r($all);
+
+	$row = $db->getAll("select * from mh  where title like '%海贼王%'", []);
+	if (empty($row)) {
+		$id = $db->insert('mh', [
+			'id' => $max + 1,
+			'title' => '海贼王'
+		]);
+	} else {
+		$id = $row[0]['id'];
+	}
+	foreach ($all as $k => $val) {
+		$row = $db->getAll("select * from mh_zj  where manhua_id=? and type=100 and dir_str=?", [$id, $val['url']]);
+		print_r($row);
+		if (empty($row)) {
+			$rs = $db->insert('mh_zj', [
+				'manhua_id' => $id,
+				'title' => $val['name'],
+				'dir_str' => $val['url'],
+				'id' => $id + $k + 1,
+				'type' => 100,
+			]);
+			print_r($rs);
+		} else {
+//			$id = $row[0]['id'];
+		}
+	}
+}
+
+function getType100Img($obj, $savePath)
+{
+	$url = str_replace('//manga', '/manga', $obj['dir_str']);
+
+	$rs = file_get_contents($url);
+//	print_r($url);
+//	print_r($rs);
+	if ($rs) {
+		preg_match('/chapterImages\s\=\s\[(.*?)\]/six', $rs, $m);
+//		print_r($m);
+		$rs = json_decode('[' . $m[1] . ']', true);
+//		print_r($rs);
+		echo $savePath;
+//		exit;
+		if ($rs) {
+			foreach ($rs as $k => $r) {
+				echo 'get img ', $r, "\r\n";
+				$fs = file_get_contents($r);
+				if ($fs) {
+					file_put_contents($savePath . $k . '.jpg', $fs);
+				}
+
+			}
+		}
+	}
+
+//	exit;
 }

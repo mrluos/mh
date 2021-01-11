@@ -1,180 +1,179 @@
 <html>
-<head></head>
-<body>&#65279;
+<head>
+	<script src="http://lib.sinaapp.com/js/jquery/1.7.2/jquery.min.js"></script>
+	<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+	<meta name="viewport" content="width=device-width,initial-scale=1.0,maximum=1.0,minimum=1.0,user-scalable=0">
+	<meta name="format-detection" content="telephone=no">
+	<meta name="apple-mobile-web-app-capable" content="yes">
+	<meta name="apple-mobile-web-app-status-bar-style" content="black">
+	<style>
+		body {
+			margin: 0;
+			padding: 0;
+			overflow-x: hidden;
+		}
 
-<script src="http://lib.sinaapp.com/js/jquery/1.7.2/jquery.min.js"></script>
-<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
-<meta name="viewport" content="width=device-width,initial-scale=1.0,maximum=1.0,minimum=1.0,user-scalable=0">
-<meta name="format-detection" content="telephone=no">
-<meta name="apple-mobile-web-app-capable" content="yes">
-<meta name="apple-mobile-web-app-status-bar-style" content="black">
-<style>
-	body {
-		margin: 0;
-		padding: 0;
-		overflow-x: hidden;
-	}
+		img {
+			width: 100%;
+			height: auto;
+			display: block;
+			margin: 0 auto;
+		}
 
-	img {
-		width: 100%;
-		height: auto;
-		display: block;
-		margin: 0 auto;
-	}
+		.catalog {
+			display: block;
+		}
 
-	.catalog {
-		display: block;
-	}
+		.nav2 {
+			width: 100%;
+			height: auto;
+			display: inline;
+			margin: 0 auto;
+			padding: 5px;
+		}
 
-	.nav2 {
-		width: 100%;
-		height: auto;
-		display: inline;
-		margin: 0 auto;
-		padding: 5px;
-	}
+		.nav2.title {
+			display: block;
+		}
 
-	.nav2.title {
-		display: block;
-	}
+		.nav2.next {
+			padding: 20px;
+			position: fixed;
+			/* top: 50%; */
+			right: 0;
+			width: 100px;
+			bottom: 0;
+			z-index: 99;
+		}
 
-	.nav2.next {
-		padding: 20px;
-		position: fixed;
-		/* top: 50%; */
-		right: 0;
-		width: 100px;
-		bottom: 0;
-		z-index: 99;
-	}
+		.nav2.prev {
+			padding: 20px;
+			position: fixed;
+			/* top: 50%; */
+			left: 0;
+			width: 100px;
+			bottom: 0;
+			z-index: 99;
 
-	.nav2.prev {
-		padding: 20px;
-		position: fixed;
-		/* top: 50%; */
-		left: 0;
-		width: 100px;
-		bottom: 0;
-		z-index: 99;
+		}
 
-	}
+		#body {
+			/*margin-bottom: 100px;*/
+			padding: 70px 0px;
+		}
 
-	#body {
-		/*margin-bottom: 100px;*/
-		padding: 70px 0px;
-	}
+		.catalog {
+			display: block;
+			padding: 5px;
+			border-bottom: 1px solid #eaeaea;
+		}
 
-	.catalog {
-		display: block;
-		padding: 5px;
-		border-bottom: 1px solid #eaeaea;
-	}
+		.catalog.true {
+			color: red;
+		}
 
-	.catalog.true {
-		color: red;
-	}
+		.header {
+			position: fixed;
+			padding: 15px;
+			background: #b12828;
+			width: 100%;
+			color: white;
+			top: 0;
+			display: flex;
+		}
 
-	.header {
-		position: fixed;
-		padding: 15px;
-		background: #b12828;
-		width: 100%;
-		color: white;
-		top: 0;
-		display: flex;
-	}
+		.footer {
+			bottom: 0;
+			position: fixed;
+			display: flex;
+			background: #b12828;
+			width: 100%;
+			color: white;
+		}
 
-	.footer {
-		bottom: 0;
-		position: fixed;
-		display: flex;
-		background: #b12828;
-		width: 100%;
-		color: white;
-	}
+		.prev, .next, .more, .go-back {
+			flex: 1;
+			padding: 15px 0;
+			text-align: center;
+		}
 
-	.prev, .next, .more, .go-back {
-		flex: 1;
-		padding: 15px 0;
-		text-align: center;
-	}
+		.footer-a {
+			width: 100%;
+			display: block;
+			text-align: center;
+			color: white;
+			text-decoration: underline;
+		}
 
-	.footer-a {
-		width: 100%;
-		display: block;
-		text-align: center;
-		color: white;
-		text-decoration: underline;
-	}
+		.home {
+			width: 50px;;
+		}
 
-	.home {
-		width: 50px;;
-	}
+		.header > .footer-a {
+			text-align: left;
+		}
 
-	.header > .footer-a {
-		text-align: left;
-	}
+		.go-top {
+			position: fixed;
+			right: 5px;
+			bottom: 83px;
+			width: 60px;
+			height: 60px;
+			background: #d4cabd;
+			line-height: 55px;
+			text-align: center;
+			border-radius: 50%;
+		}
 
-	.go-top {
-		position: fixed;
-		right: 5px;
-		bottom: 83px;
-		width: 60px;
-		height: 60px;
-		background: #d4cabd;
-		line-height: 55px;
-		text-align: center;
-		border-radius: 50%;
-	}
+		.show {
+			bottom: 160px;
+		}
 
-	.show {
-		bottom: 160px;
-	}
+		.img {
+			bottom: 250px;
+		}
 
-	.img {
-		bottom: 250px;
-	}
+		.hide {
+			display: none;
+		}
 
-	.hide {
-		display: none;
-	}
+		.show-wrap {
+			bottom: 0 !important;
+		}
 
-	.show-wrap {
-		bottom: 0 !important;
-	}
+		div#catalog-wrap {
+			position: fixed;
+			bottom: -60%;
+			background: #fdfdfd;
+			/* width: 100%; */
+			left: 0;
+			height: 50%;
+			padding: 20px;
+			right: 0;
+			overflow: hidden;
+			border-top: 1px solid #ffffff;
+			box-shadow: 1px -1px 5px 3px #d0d0d0;
+			overflow-y: auto;
+		}
 
-	div#catalog-wrap {
-		position: fixed;
-		bottom: -60%;
-		background: #fdfdfd;
-		/* width: 100%; */
-		left: 0;
-		height: 50%;
-		padding: 20px;
-		right: 0;
-		overflow: hidden;
-		border-top: 1px solid #ffffff;
-		box-shadow: 1px -1px 5px 3px #d0d0d0;
-		overflow-y: auto;
-	}
+		a.catalog-a-vr {
+			display: block;
+			padding: 5px;
+			font-size: 14px;
+			background: #b12828;
+			margin: 6px 0;
+			box-shadow: 1px 1px 2px #b12828;
+			color: #fff;
+		}
 
-	a.catalog-a-vr {
-		display: block;
-		padding: 5px;
-		font-size: 14px;
-		background: #b12828;
-		margin: 6px 0;
-		box-shadow: 1px 1px 2px #b12828;
-		color: #fff;
-	}
-
-	span.close-wrap {
-		width: 100%;
-		display: block;
-		text-align: right;
-	}
-</style>
-
+		span.close-wrap {
+			width: 100%;
+			display: block;
+			text-align: right;
+		}
+	</style>
+</head>
+<body>
 
 <div class="header">
 	Total:<span id="img-count"></span>/
@@ -184,9 +183,15 @@
 
 </div>
 <div class="footer">
-
-	<div class="prev"><a class="footer-a fun" id="prev" data-type="1" href="#">上一页</a></div>
-	<div class="next"><a class="footer-a fun" id="next" data-type="2" href="#">下一页</a></div>
+	<div class="prev">
+		<a class="footer-a fun" id="prev" data-type="1" href="#">上一页</a>
+	</div>
+	<div class="more">
+		<a class="btn-more footer-a">更多</a>
+	</div>
+	<div class="next">
+		<a class="footer-a fun" id="next" data-type="2" href="#">下一页</a>
+	</div>
 </div>
 <!--<div class="go-top img">img</div>-->
 <div class="go-top top">Top</div>
@@ -272,10 +277,10 @@
         displayImg(0);
         var count = 10;
 
-        var url = $("img").data('base');
-        if (!url) {
-            $(".btn-more").remove();
-        }
+        // var url = $("img").data('base');
+        // if (!url) {
+        //     $(".btn-more").remove();
+        // }
         $(".btn-more").on("click", function () {
             var _img = [];
             count += 10;

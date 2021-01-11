@@ -20,6 +20,9 @@ function dispatch(&$args)
 		case '2000':
 			updateImgSuffix($args[1], $args[2]);
 			break;
+		case '3000':
+			getMHByHZW();
+			break;
 		default:
 			die('Invalid Request');
 	}

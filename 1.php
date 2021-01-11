@@ -137,7 +137,7 @@ if ($id) {
 if ($getdata) {
 //	$html = array_slice($html, 0, 200);
 	ob_clean();;
-	$rs=json_encode($getdataAry,1);
+	$rs = json_encode($getdataAry, 1);
 	exit($rs);
 }
 $html = implode('', $html);
@@ -261,6 +261,36 @@ echo <<<EOF
 		.hide{
 		display: none;
 		}
+			div#catalog-wrap {
+		position: fixed;
+		bottom: -60%;
+		background: #fdfdfd;
+		/* width: 100%; */
+		left: 0;
+		height: 50%;
+		padding: 20px;
+		right: 0;
+		overflow: hidden;
+		border-top: 1px solid #ffffff;
+		box-shadow: 1px -1px 5px 3px #d0d0d0;
+		overflow-y: auto;
+	}
+
+	a.catalog-a-vr {
+		display: block;
+		padding: 5px;
+		font-size: 14px;
+		background: #b12828;
+		margin: 6px 0;
+		box-shadow: 1px 1px 2px #b12828;
+		color: #fff;
+	}
+
+	span.close-wrap {
+		width: 100%;
+		display: block;
+		text-align: right;
+	}
 	</style>
 </head>
 
@@ -284,11 +314,70 @@ echo <<<EOF
 <div class="go-top img">img</div>
 <div class="go-top top">Top</div>
 <div class="go-top show">show</div>
+<div id="catalog-wrap">
+	<span class="close-wrap">X</span>
+</div>
+<img id="img-wrap" style="width: 1px;height: 1px;display: none">
 <script>
 $(function() {
+    /**
+ * Trigger a callback when the selected images are loaded:
+ * @param {String} selector
+ * @param {Function} callback
+  */
+var onImgLoad = function(selector, callback){
+    $(selector).each(function(){
+        if (this.complete || /*for IE 10-*/ $(this).height() > 0) {
+            callback.apply(this);
+        }
+        else {
+            $(this).on('load', function(){
+                callback.apply(this);
+            });
+        }
+    });
+};
+
+
+/**
+ * Trigger a callback when 'this' image is loaded:
+ * @param {Function} callback
+ */
+(function($){
+    $.fn.imgLoad = function(callback) {
+        return this.each(function() {
+            if (callback) {
+                if (this.complete || /*for IE 10-*/ $(this).height() > 0) {
+                    callback.apply(this);
+                }
+                else {
+                    $(this).on('load', function(){
+                        callback.apply(this);
+                    });
+                }
+            }
+        });
+    };
+})(jQuery);
   var count = 10;
   
-  
+   var imglen = 0;
+        var loadImg = 0;
+        var curIndex = 0
+
+        function getimg(_list) {
+            if (_list.length == 0) return;
+            imglen += _list.length * 1;
+            $("#img-count").html(imglen);
+            _list.map(res => {
+                
+                $("img").attr('src', res).on('imgLoad', function () {
+                    loadImg++;
+                    $("#img-load").html(loadImg);
+                });
+            })
+        }
+       
   var url=$("img").data('base');
   if(!url){
       $(".btn-more").remove();
@@ -325,8 +414,8 @@ $(function() {
         }
         show =!show;
   })
-  $(".go-top.show").click();
-$(".go-top.img").click();  
+    $(".go-top.show").click();
+	$(".go-top.img").click();  
 })
 </script>
 </body>
