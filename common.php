@@ -898,12 +898,19 @@ class MH extends DbModel
 	}
 }
 
-function getPage($page = 1)
+function getPage($page = 1, $type = 1)
 {
 	$db = new MH();
-//	$rs = gf_http_get('http://www.xiximh.vip/home/api/getpage/tp/1-vip-' . $page);
-//	$rs = gf_http_get('http://www.xiximh.vip/home/api/getpage/tp/1-competitive-' . $page);
-	$rs = gf_http_get('http://www.xiximh.vip/home/api/getpage/tp/1-newest-' . $page);
+	if ($type == 1) {
+		$rs = gf_http_get('http://www.xiximh.vip/home/api/getpage/tp/1-vip-' . $page);
+	}
+	if ($type == 2) {
+		$rs = gf_http_get('http://www.xiximh.vip/home/api/getpage/tp/1-competitive-' . $page);
+	}
+	if ($type == 3) {
+		$rs = gf_http_get('http://www.xiximh.vip/home/api/getpage/tp/1-newest-' . $page);
+	}
+
 
 	$rs = json_decode($rs, true);
 
@@ -912,12 +919,13 @@ function getPage($page = 1)
 		var_dump($page, count($list));
 		foreach ($list as $item) {
 			if (empty($db->getOne($item['id']))) {
+				echo "\r\nadd news {$item['id']} {$item['title']}\r\n";
 				$db->add($item);
 			}
 
 		}
 		if ($rs['result']['lastPage'] == false) {
-			getPage($page + 1);
+			getPage($page + 1, $type);
 		}
 	}
 }
@@ -1042,19 +1050,24 @@ function getAllZJEx($id)
 {
 
 	$rs = gf_http_get('http://www.xiximh.vip/home/api/chapter_list/tp/' . $id . '-1-1-1000');
-
+	$db = new MH();
 	$rs = json_decode($rs, true);
+//	print_r($rs);
 	$list = [];
 	if ($rs['code'] == 1) {
 		$list = $rs['result']['list'];
-		foreach ($list as $k => $i) {
+//		var_dump($item['id'], count($list));
+		foreach ($list as $i) {
 			if (isset($i['image'])) {
 				preg_match('/\/bookimages\/(\d+)\//si', $i['image'], $match);
 				if (isset($match[1])) {
-					$i['dir_str'] = '/bookimages/' . $match[1] . '/' . $i['cjid'] . '/';
+					$i['dir_str'] = '/bookimages/' . $match[1] . '/' . $i['id'] . '/';
 				}
 			}
-			$list[$k] = $i;
+			if (empty($db->getOneZJ($i['id']))) {
+				echo "\r\n", "add new Id " . $i['id'], "\r\n";
+				$db->insert('mh_zj', $i);
+			}
 
 		}
 	}
@@ -1203,7 +1216,7 @@ function updateImgSuffix($page = 1, $pageSize = 100)
 	}
 }
 
-function getImgToLoc($id = null, $sonId = null, $page = 0, $pagesize = 0)
+function getImgToLoc($id = null, $sonId = null, $page = 0, $pagesize = 0, $desc = 'desc')
 {
 	$db = new MH();
 	$limit = '';
@@ -1219,7 +1232,7 @@ JOIN mh_zj j ON j.manhua_id = t.id
 ', []);
 	} else {
 
-		$all = $db->getAll('select * from mh_zj where manhua_id = ? order  by sort*1 desc', [$id]);
+		$all = $db->getAll('select * from mh_zj where manhua_id = ? order  by sort*1 ' . $desc, [$id]);
 	}
 	$total = 0;
 	foreach ($all as $k => $item) {
