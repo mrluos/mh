@@ -1059,9 +1059,11 @@ function getAllZJEx($id)
 //		var_dump($item['id'], count($list));
 		foreach ($list as $i) {
 			if (isset($i['image'])) {
-				preg_match('/\/bookimages\/(\d+)\//si', $i['image'], $match);
-				if (isset($match[1])) {
-					$i['dir_str'] = '/bookimages/' . $match[1] . '/' . $i['id'] . '/';
+				preg_match('/\/bookimages\/(\d+)\/(\d+)/si', $i['image'], $match);
+//				var_dump($match);
+				if (isset($match[0])) {
+					$i['dir_str']=$match[0].'/';
+//					$i['dir_str'] = '/bookimages/' . $match[1] . '/' . $i['id'] . '/';
 				}
 			}
 			if (empty($db->getOneZJ($i['id']))) {
@@ -1407,12 +1409,12 @@ function jsonOutput($data)
 	exit($rs);
 }
 
-function jsonSuccess($data)
+function jsonSuccess($data=[])
 {
 	jsonOutput(['code' => 0, 'data' => $data, 'msg' => '']);
 }
 
-function jsonError($msg, $data)
+function jsonError($msg='', $data=[])
 {
 	jsonOutput(['code' => -1, 'data' => $data, 'msg' => $msg]);
 }
