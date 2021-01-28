@@ -52,6 +52,9 @@ function dispatch(&$args)
 '2000': updateImgSuffix(args[1], args[2]); 更新图片后缀
 '2002': getAllZJEx(args[1]); 获取章节
 '3000': getMHByHZW();
+'4000':getPage(1, 1);
+'4001':getPage(1, 2);
+'4002':getPage(1, 3);
 HTML;
 			die('Invalid Request');
 	}

@@ -1,4 +1,4 @@
-﻿<?php
+<?php
 include_once './common.php';
 $id = $_GET['id'] ?? null;
 $cid = $_GET['cid'] ?? null;
@@ -159,7 +159,6 @@ echo <<<EOF
 			margin: 0;padding: 0;
 			overflow-x: hidden;
 		}
-
 		img{
 			width: 100%;
 			height: auto;
@@ -278,7 +277,6 @@ echo <<<EOF
 		box-shadow: 1px -1px 5px 3px #d0d0d0;
 		overflow-y: auto;
 	}
-
 	a.catalog-a-vr {
 		display: block;
 		padding: 5px;
@@ -288,7 +286,6 @@ echo <<<EOF
 		box-shadow: 1px 1px 2px #b12828;
 		color: #fff;
 	}
-
 	span.close-wrap {
 		width: 100%;
 		display: block;
@@ -296,7 +293,6 @@ echo <<<EOF
 	}
 	</style>
 </head>
-
 <body>
 <div class="header hide">
 <a href="1.php" class="footer-a home">首页</a>
@@ -312,7 +308,6 @@ echo <<<EOF
 </div>
 <div class="go-back">{$gobackHtml}</div>
 <div class="next">{$nextHtml}</div>
-
 </div>
 <div class="go-top img">img</div>
 <div class="go-top top">Top</div>
@@ -340,8 +335,6 @@ var onImgLoad = function(selector, callback){
         }
     });
 };
-
-
 /**
  * Trigger a callback when 'this' image is loaded:
  * @param {Function} callback
@@ -367,7 +360,6 @@ var onImgLoad = function(selector, callback){
    var imglen = 0;
         var loadImg = 0;
         var curIndex = 0
-
         function getimg(_list) {
             if (_list.length == 0) return;
             imglen += _list.length * 1;

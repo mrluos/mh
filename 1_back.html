@@ -331,8 +331,10 @@
             var show1 = true;
             var chapter = {};
             var $loadRat = $(".go-top.load");
+            var $imgBase = 'http://www.xiximh.vip/';
+            var $body = $("#body")
 
-            function initPage(id) {
+            function initPageById(id) {
                 $.ajax('1.php?getdata=1&id=' + id).then(res => {
                     $(".load-rs-wrap").removeClass('hide');
                     var data = JSON.parse(res);
@@ -351,6 +353,24 @@
                     $("#catalog-list").append($h2.join(''))
                     $("#catalog-wrap").append($h.join(''));
                     displayImg(0);
+                })
+
+            }
+
+            function initPage() {
+                $.ajax('1.php?method=init').then(res => {
+                    $(".load-rs-wrap").removeClass('hide');
+                    var data = JSON.parse(res);
+                    // console.log(data);
+                    var catalog = data.data;
+                    var $h = [];
+                    catalog.map((item, index) => {
+                        // console.log(index, item);
+                        // cacheChapter(item.img);
+                        $h.push('<a class="catalog " href="1.php?id=' + item['id'] + '"><img class="img-cover hide" src="' + $imgBase + '"/>[ ' + item['id'] + ' ]' + item['title'] + '</a>');
+
+                    });
+                    $body.html($h.join(''));
                 })
 
             }
@@ -514,7 +534,7 @@
                     }
                 }
             });
-            initPage(urlList[1]);
+            initPage();
         } catch (e) {
             alert(e);
         }

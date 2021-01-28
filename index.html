@@ -1,0 +1,487 @@
+<html>
+<head>
+	<script src="http://lib.sinaapp.com/js/jquery/1.7.2/jquery.min.js"></script>
+	<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+	<meta name="viewport" content="width=device-width,initial-scale=1.0,maximum=1.0,minimum=1.0,user-scalable=0">
+	<meta name="format-detection" content="telephone=no">
+	<meta name="apple-mobile-web-app-capable" content="yes">
+	<meta name="apple-mobile-web-app-status-bar-style" content="black">
+	<style>
+		body {
+			margin: 0;
+			padding: 0;
+			overflow-x: hidden;
+		}
+
+		img {
+			width: 100%;
+			height: auto;
+			display: block;
+			margin: 0 auto;
+		}
+
+		.catalog {
+			display: block;
+		}
+
+		.nav2 {
+			width: 100%;
+			height: auto;
+			display: inline;
+			margin: 0 auto;
+			padding: 5px;
+		}
+
+		.nav2.title {
+			display: block;
+		}
+
+		.nav2.next {
+			padding: 20px;
+			position: fixed;
+			/* top: 50%; */
+			right: 0;
+			width: 100px;
+			bottom: 0;
+			z-index: 99;
+		}
+
+		.nav2.prev {
+			padding: 20px;
+			position: fixed;
+			/* top: 50%; */
+			left: 0;
+			width: 100px;
+			bottom: 0;
+			z-index: 99;
+
+		}
+
+		#body {
+			/*margin-bottom: 100px;*/
+			padding: 70px 0px;
+		}
+
+		.catalog {
+			display: block;
+			padding: 5px;
+			border-bottom: 1px solid #eaeaea;
+		}
+
+		.catalog.true {
+			color: red;
+		}
+
+		.header {
+			position: fixed;
+			padding: 15px;
+			background: #b12828;
+			width: 100%;
+			color: white;
+			top: 0;
+			display: flex;
+		}
+
+		.footer {
+			bottom: 0;
+			position: fixed;
+			display: flex;
+			background: #b12828;
+			width: 100%;
+			color: white;
+		}
+
+		.prev, .next, .more, .go-back {
+			flex: 1;
+			padding: 15px 0;
+			text-align: center;
+		}
+
+		.footer-a {
+			width: 100%;
+			display: block;
+			text-align: center;
+			color: white;
+			text-decoration: underline;
+		}
+
+		.home {
+			width: 50px;;
+		}
+
+		.header > .footer-a {
+			text-align: left;
+		}
+
+		.go-top {
+			position: fixed;
+			right: 5px;
+			bottom: 83px;
+			width: 60px;
+			height: 60px;
+			color: antiquewhite;
+			background: #b12828;
+			line-height: 55px;
+			text-align: center;
+			border-radius: 50%;
+		}
+
+		.go-top.load {
+			bottom: 283px;
+			background: #1f1f1ea1;
+		}
+
+		.show {
+			bottom: 160px;
+		}
+
+		.img {
+			bottom: 250px;
+		}
+
+		.hide {
+			display: none;
+		}
+
+		.show-wrap {
+			bottom: 0 !important;
+		}
+
+		div#catalog-wrap {
+			position: fixed;
+			bottom: -60%;
+			background: #fdfdfd;
+			/* width: 100%; */
+			left: 0;
+			height: 50%;
+			padding: 20px;
+			right: 0;
+			overflow: hidden;
+			border-top: 1px solid #ffffff;
+			box-shadow: 1px -1px 5px 3px #d0d0d0;
+			overflow-y: auto;
+		}
+
+		a.catalog-a-vr {
+			display: block;
+			padding: 5px;
+			font-size: 14px;
+			background: #b12828;
+			margin: 6px 0;
+			box-shadow: 1px 1px 2px #b12828;
+			color: #fff;
+		}
+
+		span.close-wrap {
+			width: 100%;
+			display: block;
+			text-align: right;
+		}
+
+		.img-wrap {
+			boder: 1px solid #f00
+		}
+
+		.load-rs-wrap {
+			position: fixed;
+			z-index: 9999;
+			color: antiquewhite;
+			background: #343c44ad;
+			width: 100%;
+			height: 100%;
+			top: 0;
+			left: 0;
+			transition: top 0.2s linear;
+		}
+
+		.load-rs-notice {
+			position: absolute;
+			top: 50%;
+			text-align: center;
+			width: 100%;
+			color: #e2afaf;
+			/*transition: top 0.2s linear;*/
+		}
+
+		.sm-rs-notice {
+			line-height: 40px;
+			text-align: center;
+			border-radius: 5px;
+			background: #b12828;
+			flex: 1;
+			color: white;
+			margin: 0 28px;;
+		}
+
+		.load-rs-wrap.small {
+			top: -100%;
+		}
+
+		.sm-rs-notice.save {
+			left: 30%;
+			background: #28b165;
+		}
+
+		.sm-rs-notice.small {
+			left: auto;
+			right: 0;
+			top: 0;
+			line-height: 51px;
+			position: fixed;
+			background: #b12828;
+		}
+
+		div#catalog-list {
+			background: white;
+			height: 50%;
+			overflow-y: auto;
+			padding: 12px;
+		}
+
+		.load-rs-info {
+			background: white;
+			overflow-y: auto;
+			padding: 12px 12px 0px 12px;
+			color: #343c44;
+			border-top: 1px solid #ffffff;
+			box-shadow: 1px -1px 5px 3px #d0d0d0;
+		}
+
+		.load-rs-cache {
+			display: flex;
+			background: white;
+			overflow-y: auto;
+			padding: 12px;
+			color: #00529a;
+			border-top: 1px solid #ffffff;
+			box-shadow: 1px -1px 5px 3px #d0d0d0;
+		}
+
+		.cache-all {
+			margin-top: 12px;
+			font-size: 16px;
+
+		}
+
+		.cache-all > input {
+			width: 16px;
+			height: 16px;
+		}
+
+		.load-rs-wrap.small {
+		}
+	</style>
+</head>
+<body>
+
+<div class="header">
+	<span id="title-p">首页</span>
+</div>
+<div id="body">
+
+</div>
+<div class="go-top img">img</div>
+<div class="go-top top">top</div>
+<img id="img-wrap" style="width: 1px;height: 1px;display: none">
+<script>
+    $(function () {
+        try {
+            var url = window.location.href;
+            var urlList = url.split('?id=');
+            var imglen = 0;
+            var loadImg = 0;
+            var curIndex = 0
+            var allData = [];
+            var count = 10;
+            var show = false;
+            var show1 = true;
+            var chapter = {};
+            var $loadRat = $(".go-top.load");
+            var $imgBase = 'http://www.xiximh.vip/';
+            var $body = $("#body")
+
+
+            function initPage() {
+                $.ajax('api.php?method=init').then(res => {
+                    $(".load-rs-wrap").removeClass('hide');
+                    var data = JSON.parse(res);
+                    // console.log(data);
+                    var catalog = data.data;
+                    var $h = [];
+                    catalog.map((item, index) => {
+                        $h.push('<a class="catalog " href="zj.html?id=' + item['id'] + '"><img class="img-cover hide" src="' + $imgBase + item['cover'] + '"/>[ ' + item['id'] + ' ]' + item['title'] + '</a>');
+
+                    });
+                    $body.html($h.join(''));
+                })
+
+            }
+
+            function cacheSelectImg() {
+                var $ids = [];
+                $(".catalog-a-vr.checkbox").each((index, item) => {
+                    if ($(item).find('input').prop('checked')) {
+                        $ids.push($(item).data("index"))
+                    }
+                })
+                if ($ids.length > 0) {
+                    setTimeout(() => {
+                        $ids.map(res => {
+                            cacheChapter(allData[res].img);
+                        })
+                    }, 350)
+                }
+            }
+
+            function caculateRate() {
+                loadImg = loadImg * 1;
+                if (loadImg >= 0 && imglen > 0) {
+                    $loadRat.removeClass('hide')
+                    $loadRat.html((loadImg / imglen * 100).toFixed(0, 10) + '%')
+                }
+                if (loadImg == imglen) {
+                    $loadRat.addClass('hide')
+                }
+            }
+
+            function getOneImg(_url, _cb, _errorCb) {
+                var i = new Image();
+                i.onload = _cb;
+                i.onerror = _errorCb;
+                i.src = _url;
+            }
+
+            function cacheChapter(_list) {
+                if (_list.length == 0) return;
+                imglen += _list.length * 1;
+                $("#img-count").html(imglen);
+                _list.map(res => {
+                    getOneImg(res, () => {
+                        loadImg++;
+                        $("#img-load").html(loadImg);
+                        caculateRate()
+                    }, () => {
+                        loadImg--;
+                        $("#img-load").html(loadImg);
+                        caculateRate()
+                    })
+                    // $("img").attr('src', res).on('load', function () {
+                    //     loadImg++;
+                    //     $("#img-load").html(loadImg);
+                    // });
+                })
+            }
+
+            function displayImg(_index) {
+
+                if (allData[_index]) {
+                    curIndex = _index
+                    console.log(curIndex);
+                    var imgs = [];
+                    allData[_index].img.map(res => {
+                        imgs.push('<img class="img-wrap" src="' + res + '"/>')
+                    })
+                    $("#title-p").html(allData[_index].item['title']);
+                    $("#body").html(imgs.join(''));
+                }
+
+            }
+
+            $(".sm-rs-notice").on("click", function () {
+                var $this = $(this);
+                var type = $this.data('type')
+                if ($this.hasClass('small')) {
+                    $('.load-rs-wrap').removeClass('small');
+                    $this.removeClass('small');
+                    $this.html('Small')
+                } else {
+                    $('.load-rs-wrap').addClass('small');
+                    $this.addClass('small');
+                    $this.html('Cache')
+                }
+                if (type == 'save') {
+                    cacheSelectImg();
+                }
+            })
+            $(".footer-a.fun").on('click', function () {
+                console.log(curIndex);
+                var $this = $(this);
+                var type = $this.data('type') * 1;
+                if (type == 2) {
+                    curIndex++
+
+                } else {
+                    curIndex--;
+                }
+                displayImg(curIndex);
+            })
+            $(".close-wrap").on("click", function () {
+                $("#catalog-wrap").removeClass("show-wrap");
+            })
+            $("#cache-all").on("click", function () {
+
+                var $this = $(this);
+                console.log($this.prop('checked'))
+                if ($this.prop('checked')) {
+                    $(".catalog-a-vr.checkbox").each((index, item) => {
+                        $(item).find('input').prop('checked', true);
+                    })
+                } else {
+                    $(".catalog-a-vr.checkbox").each((index, item) => {
+                        $(item).find('input').prop('checked', false);
+                    })
+                }
+            })
+            $(".btn-more").on("click", function () {
+                var _img = [];
+                count += 10;
+                for (var i = count - 10; i < count; i++) {
+                    var _url = url.replace('@#@', i);
+                    _img.push('<img src="' + _url + '"/>')
+                }
+                _img = _img.join('');
+                $("#body").append(_img);
+            })
+            $(".go-top.top").on("click", function () {
+                $("body").scrollTop(0);
+            });
+            $(".go-top.img").on("click", function () {
+                if (show1) {
+                    $(".img-cover").addClass('hide')
+                } else {
+                    $(".img-cover").removeClass('hide')
+                }
+                show1 = !show1;
+            });
+            $(".go-top.show").on("click", function () {
+                $("#catalog-wrap").addClass("show-wrap")
+            })
+            $("body").on("click", ".catalog-a-vr", function (e) {
+
+                console.log(e);
+                var $el = $(this);
+                var top = -1;
+                var index = $el.data('index');
+                var type = $el.data('type')
+                if (type == '1') {
+                    displayImg(index);
+                    $("#catalog-wrap").removeClass("show-wrap")
+                } else {
+                    var $checkIpt = $(this).find('input');
+
+                    if ($checkIpt.prop('checked')) {
+                        $checkIpt.prop('checked', false);
+                    } else {
+                        $checkIpt.prop('checked', true);
+                    }
+                }
+            });
+            initPage();
+        } catch (e) {
+            alert(e);
+        }
+    })
+</script>
+
+</body>
+</html>

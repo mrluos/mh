@@ -1163,7 +1163,7 @@ function getPicCount($item, $suffix = '-1')
 //	print_r($map);
 }
 
-function testForImgSuffix($locSuffix, $remoteDir = '', $testPic = '2')
+function testForImgSuffix($locSuffix, $remoteDir = '', $testPic = '2', $isDebug = true)
 {
 	$suffix = ($locSuffix ? $locSuffix : '');
 	$count = 0;
@@ -1177,7 +1177,9 @@ function testForImgSuffix($locSuffix, $remoteDir = '', $testPic = '2')
 
 		$imgUrl = 'http://www.xiximh.vip/' . $remoteDir . $testPic . $suffix;
 		$rs = @file_get_contents($imgUrl);
-		echo ' suffix test for [' . $suffix, '] ', $imgUrl, ' #----> ', boolval($rs) ? 'true' : 'false', "\r\n";
+		if ($isDebug) {
+			echo ' suffix test for [' . $suffix, '] ', $imgUrl, ' #----> ', boolval($rs) ? 'true' : 'false', "\r\n";
+		}
 		if ($rs) {
 			break;
 		}
@@ -1396,6 +1398,21 @@ function getType100Img($obj, $savePath)
 			}
 		}
 	}
+}
 
-//	exit;
+function jsonOutput($data)
+{
+	ob_clean();;
+	$rs = json_encode($data, 1);
+	exit($rs);
+}
+
+function jsonSuccess($data)
+{
+	jsonOutput(['code' => 0, 'data' => $data, 'msg' => '']);
+}
+
+function jsonError($msg, $data)
+{
+	jsonOutput(['code' => -1, 'data' => $data, 'msg' => $msg]);
 }
