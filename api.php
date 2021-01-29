@@ -98,8 +98,21 @@ function getZjInfo($id, $cid)
 
 }
 
+function is_win()
+{
+	$os_name = PHP_OS;
+	if (strpos($os_name, "Linux") !== false) {
+		//Linux操作系统
+		return false;
+	} else if (strpos($os_name, "WIN") !== false) {
+		//Windows操作系统
+		return true;
+	}
+}
+
 if ($method !== null) {
-	$phpIni = '-c  E:\soft\xampp7\php\php.ini';
+	$phpIni = ' -c  E:\soft\xampp7\php\php.ini ';
+	$path = dirname(__FILE__);
 	switch ($method) {
 		case 'init':
 			jsonSuccess(makeAllMh());
@@ -112,16 +125,22 @@ if ($method !== null) {
 			break;
 		case 'updateMH':
 
-			exec('php ' . $phpIni . ' getdata.php 4001', $out);
-			print_r($out);
-			exec('php ' . $phpIni . ' getdata.php 4001', $out);
-			print_r($out);
-			exec('php ' . $phpIni . ' getdata.php 4002', $out);
-			print_r($out);
+//			$file = popen('start /MIN php ' . $phpIni .  'getdata.php 2002 15271 ', "r");
+//			pclose($file);
+//			return;
+			pclose(popen('start /MIN php' . $phpIni . ' getdata.php 4001', "r"));
+			pclose(popen('start /MIN php' . $phpIni . ' getdata.php 4002', "r"));
+			pclose(popen('start /MIN php' . $phpIni . ' getdata.php 4000', "r"));
+//			exec('php ' . $phpIni . ' getdata.php 4001', $out);
+//			print_r($out);
+//			exec('php ' . $phpIni . ' getdata.php 4001', $out);
+//			print_r($out);
+//			exec('php ' . $phpIni . ' getdata.php 4002', $out);
+//			print_r($out);
 			break;
 		case 'updateZJ':
 			exec('php ' . $phpIni . ' getdata.php 2002 ' . $id, $out);
-//			var_dump($out);
+			print_r($out);
 			$new = [];
 			foreach ($out as $k => $val) {
 //				var_dump($val);

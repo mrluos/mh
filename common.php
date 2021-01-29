@@ -894,7 +894,7 @@ class MH extends DbModel
 
 	public function getAllMH()
 	{
-		return $this->getAll('select * from ' . $this->table . ' order by ticai desc', []);
+		return $this->getAll('select * from ' . $this->table . ' order by id desc', []);
 	}
 }
 
@@ -1048,11 +1048,12 @@ function getAllZJMaxImg()
 
 function getAllZJEx($id)
 {
-
+	echo "\r\r get 'http://www.xiximh.vip/home/api/chapter_list/tp/{$id}-1-1-1000' \r\r";
 	$rs = gf_http_get('http://www.xiximh.vip/home/api/chapter_list/tp/' . $id . '-1-1-1000');
 	$db = new MH();
-	$rs = json_decode($rs, true);
 //	print_r($rs);
+	$rs = json_decode($rs, true);
+
 	$list = [];
 	if ($rs['code'] == 1) {
 		$list = $rs['result']['list'];
@@ -1062,7 +1063,7 @@ function getAllZJEx($id)
 				preg_match('/\/bookimages\/(\d+)\/(\d+)/si', $i['image'], $match);
 //				var_dump($match);
 				if (isset($match[0])) {
-					$i['dir_str']=$match[0].'/';
+					$i['dir_str'] = $match[0] . '/';
 //					$i['dir_str'] = '/bookimages/' . $match[1] . '/' . $i['id'] . '/';
 				}
 			}
@@ -1409,12 +1410,12 @@ function jsonOutput($data)
 	exit($rs);
 }
 
-function jsonSuccess($data=[])
+function jsonSuccess($data = [])
 {
 	jsonOutput(['code' => 0, 'data' => $data, 'msg' => '']);
 }
 
-function jsonError($msg='', $data=[])
+function jsonError($msg = '', $data = [])
 {
 	jsonOutput(['code' => -1, 'data' => $data, 'msg' => $msg]);
 }
