@@ -270,18 +270,24 @@
 
 		.load-rs-wrap.small {
 		}
+
+		a.a-link {
+			margin-right: 10px;
+			color: white;
+			text-decoration: underline;
+		}
 	</style>
 </head>
 <body>
 
 <div class="header">
-
-	<a href="index.html">首页</a>
+	<a href="index.html" class="a-link">首页</a>
 </div>
 <div id="body">
 
 </div>
 <div class="go-top top">Top</div>
+<div class="go-top load">update</div>
 <script>
     $(function () {
         try {
@@ -298,6 +304,27 @@
             var $loadRat = $(".go-top.load");
             var $imgBase = 'http://www.xiximh.vip/';
             var $body = $("#body")
+
+            var updateFlag = false;
+            $loadRat.on("click", () => {
+                if (updateFlag) {
+                    return;
+                }
+                updateFlag = true;
+                $loadRat.html('load...')
+                $.ajax({
+                    url: 'api.php?method=updateZJ&id=' + urlList[1],
+                    success: res => {
+                        $loadRat.html('update')
+                    },
+                    'type': 'get',
+                    timeout: 3000000,
+                    complete: (req, status) => {
+                        console.log(req, status)
+                        updateFlag = false;
+                    },
+                })
+            })
 
             function initPage(id) {
                 $.ajax('api.php?method=zj&id=' + id).then(res => {
