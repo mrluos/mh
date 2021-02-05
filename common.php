@@ -1083,7 +1083,6 @@ function getAllZJEx($id)
 				echo "\r\n", "add new Id " . $i['id'], "\r\n";
 				$db->insert('mh_zj', $i);
 			}
-
 		}
 	}
 	return $list;
