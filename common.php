@@ -1048,10 +1048,15 @@ function getAllZJMaxImg()
 
 function getAllZJEx($id)
 {
+//	$test = '/bookimages/1445//9f41a557-7aa8-4f50-92ae-bdf99fe58a3e.png';
+//	preg_match('/\/bookimages\/(\d+)\/(\d{0,})/si', $test, $match);
+//	print_r($match);
+//	return;
+
 	echo "\r\r get 'http://www.xiximh.vip/home/api/chapter_list/tp/{$id}-1-1-1000' \r\r";
 	$rs = gf_http_get('http://www.xiximh.vip/home/api/chapter_list/tp/' . $id . '-1-1-1000');
 	$db = new MH();
-//	print_r($rs);
+
 	$rs = json_decode($rs, true);
 
 	$list = [];
@@ -1059,15 +1064,22 @@ function getAllZJEx($id)
 		$list = $rs['result']['list'];
 //		var_dump($item['id'], count($list));
 		foreach ($list as $i) {
+
 			if (isset($i['image'])) {
-				preg_match('/\/bookimages\/(\d+)\/(\d+)/si', $i['image'], $match);
-//				var_dump($match);
+				preg_match('/\/bookimages\/(\d+)\/(\d{0,})/si', $i['image'], $match);
+				print_r($match);
+
 				if (isset($match[0])) {
 					$i['dir_str'] = $match[0] . '/';
+					$i['dir_str'] = preg_replace('/(\/{1,})/si', '/', $i['dir_str']);
+					if (empty($match[2])) {
+						$i['dir_str'] = $i['dir_str'] . $i['cjid'] . '/';
+					}
 //					$i['dir_str'] = '/bookimages/' . $match[1] . '/' . $i['id'] . '/';
 				}
 			}
 			if (empty($db->getOneZJ($i['id']))) {
+				print_r($i);
 				echo "\r\n", "add new Id " . $i['id'], "\r\n";
 				$db->insert('mh_zj', $i);
 			}
