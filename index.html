@@ -274,12 +274,43 @@
 
 	.load-rs-wrap.small {
 	}
+
+	.page-loading {
+		position: fixed;
+		left: 0;
+		right: 0;
+		top: 0;
+		bottom: 0;
+		background: #0000008f;
+	}
+
+	.page-loading > p {
+		position: absolute;
+		top: 50%;
+		width: 100%;
+		text-align: center;
+		z-index: 9999;
+		color: white;
+	}
+
+	.load-img-notice {
+		display: block;
+		border-radius: 50%;
+		width: 50px;
+		height: 50px;
+		line-height: 50px;
+		text-align: center;
+		color: #795548;
+		margin: 60px auto;
+		background: aliceblue;
+	}
 	</style>
 </head>
 <body>
 
 <div class="header">
 	<span id="title-p">首页</span>
+	<input typ="text" id="ipt-title"/>
 </div>
 <div id="body">
 
@@ -288,6 +319,9 @@
 <div class="go-top load">update</div>
 <div class="go-top top">top</div>
 <img id="img-wrap" style="width: 1px;height: 1px;display: none">
+<div class="page-loading" id="page-loading">
+	<p>加载中...</p>
+</div>
 <script>
     $(function () {
         try {
@@ -304,6 +338,8 @@
             var $loadRat = $(".go-top.load");
             var $imgBase = 'http://www.xiximh.vip/';
             var $body = $("#body")
+            var lastAjax = null;
+            var $pageLoading = $("#page-loading");
 
             var updateFlag = false;
             $loadRat.on("click", () => {
@@ -325,19 +361,38 @@
                     },
                 })
             })
+            $("#ipt-title").on("change", function change(e) {
+                let val = $(this).val();
+                if (lastAjax) {
+
+                    let $h = [];
+                    lastAjax.map((item, index) => {
+                        if (item.title.indexOf(val) !== -1 || val == undefined) {
+                            $h.push('<a class="catalog " href="zj.html?id=' + item['id'] + '"><img class="img-cover hide" src="' + $imgBase + item['cover'] + '"/>[ ' + item['id'] + ' ]' + item['title'] + '</a>');
+                        }
+
+                    });
+                    if ($h.length > 0) {
+                        $body.html($h.join(''));
+                    }
+                }
+            });
 
             function initPage() {
+                $pageLoading.removeClass("hide")
                 $.ajax('api.php?method=init').then(res => {
                     $(".load-rs-wrap").removeClass('hide');
                     var data = JSON.parse(res);
                     // console.log(data);
                     var catalog = data.data;
                     var $h = [];
+                    lastAjax = catalog;
                     catalog.map((item, index) => {
                         $h.push('<a class="catalog " href="zj.html?id=' + item['id'] + '"><img class="img-cover hide" src="' + $imgBase + item['cover'] + '"/>[ ' + item['id'] + ' ]' + item['title'] + '</a>');
 
                     });
                     $body.html($h.join(''));
+                    $pageLoading.addClass("hide")
                 })
 
             }
