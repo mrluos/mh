@@ -20,19 +20,13 @@ function getZj($id)
 	return $list;
 }
 
-function getZjInfo($id, $cid)
+function getZjInfoHtml($info)
 {
-	$getdata = 1;
-	//	$list = $db->getAll('select * from mh_zj where manhua_id =? order  by sort asc', [$id]);
 	$db = new MH();
-	$list = $db->getAll('select * from mh_zj where manhua_id =? and id =? order  by sort*1 asc', [$id, $cid]);
-//	print_r($list);
-//	exit;
-	if (empty($list)) {
-		return jsonError('没有找到这个章节');
-	}
-	$info = $list[0];
+//	$info = $list[0];
 	$dirPath = 'img/';
+	$id = $info['manhua_id'];
+	$cid = $info['id'];
 	$locPath = $dirPath . $id . '/' . $cid;
 	$ids = [];
 	$hasLoc = false;
@@ -53,7 +47,7 @@ function getZjInfo($id, $cid)
 		$num = 30;
 	}
 	$suffix = $info['image_suffix'];
-	if ($info['image_suffix_check'] != 1) {
+	if ($info['image_suffix_check'] != 1 && 0) {
 		$suffix = testForImgSuffix($suffix, $info['dir_str'], '2', false);
 		$db->update('mh_zj', [
 			'image_suffix' => $suffix,
@@ -78,23 +72,41 @@ function getZjInfo($id, $cid)
 		$imgs[] = $imgUrl;
 	}
 	$nextId = '';
-	$nextInfo = $db->getAll('select * from mh_zj where manhua_id =? and sort = ? ', [$id, intval($info['sort']) + 1]);
-	if (!empty($nextInfo)) {
-		$nextInfo = $nextInfo[0];
-		$nextId = "id=$id&cid=" . $nextInfo['id'];
-	}
+//	$nextInfo = $db->getAll('select * from mh_zj where manhua_id =? and sort = ? ', [$id, intval($info['sort']) + 1]);
+//	if (!empty($nextInfo)) {
+//		$nextInfo = $nextInfo[0];
+//		$nextId = "id=$id&cid=" . $nextInfo['id'];
+//	}
 	$prevId = '';
-	$prevInfo = $db->getAll('select * from mh_zj where manhua_id =?  and sort = ? ', [$id, intval($info['sort']) - 1]);
-	if (!empty($prevInfo)) {
-		$prevInfo = $prevInfo[0];
-		$prevId = "id=$id&cid=" . $prevInfo['id'];
-	}
+//	$prevInfo = $db->getAll('select * from mh_zj where manhua_id =?  and sort = ? ', [$id, intval($info['sort']) - 1]);
+//	if (!empty($prevInfo)) {
+//		$prevInfo = $prevInfo[0];
+//		$prevId = "id=$id&cid=" . $prevInfo['id'];
+//	}
 	return [
 		'item' => $info,
 		'img' => $imgs,
 		'next' => $nextId,
 		'prev' => $prevId
 	];
+}
+
+function getZjInfo($id, $cid)
+{
+	$getdata = 1;
+	//	$list = $db->getAll('select * from mh_zj where manhua_id =? order  by sort asc', [$id]);
+
+	$mhList = getZj($id);
+	$info = [];
+	$index = 0;
+	foreach ($mhList as $key => $val) {
+		if ($cid == $val['id']) {
+			$index = $key;
+		}
+		$info[] = getZjInfoHtml($val);
+	}
+	return ['data' => $info, 'cur' => $index];
+
 
 }
 

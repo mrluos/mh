@@ -300,11 +300,13 @@
 			color: #795548;
 			margin: 60px auto;
 			background: aliceblue;
-		}a.a-link {
-			 color: white;
-			 text-decoration: underline;
-			 margin-right: 10px;
-		 }
+		}
+
+		a.a-link {
+			color: white;
+			text-decoration: underline;
+			margin-right: 10px;
+		}
 	</style>
 </head>
 <body>
@@ -318,7 +320,7 @@
 </div>
 <div class="footer">
 	<div class="prev">
-		<a class="footer-a" id="prev" data-type="1" href="#">上一页</a>
+		<a class="footer-a fun" id="prev" data-type="1" href="#">上一页</a>
 	</div>
 	<div class="more">
 		<a class="btn-more footer-a" id="go-back-list" href="zj.html">返回列表</a>
@@ -327,7 +329,7 @@
 		<a class="btn-more footer-a">更多</a>
 	</div>
 	<div class="next">
-		<a class="footer-a" id="next" data-type="2" href="#">下一页</a>
+		<a class="footer-a fun" id="next" data-type="2" href="#">下一页</a>
 	</div>
 </div>
 <div class="go-top top">Top</div>
@@ -358,6 +360,29 @@
             $("#go-back-list").prop('href', url + '?' + (urlList[1].match(/(id=\d+)/gsi)[0]))
             var $prev = $("#prev");
             var $next = $("#next");
+            var curZJIndex = 0
+
+            function renderImg() {
+                if (!curInfo) {
+                    return;
+                }
+                curZJIndex = curZJIndex < 0 ? 0 : curZJIndex
+                if (!curInfo[curZJIndex]) {
+                    return;
+                }
+                var catalog = curInfo[curZJIndex];
+                var $h = [];
+                var len = catalog.img.length;
+                catalog.img.map((item, index) => {
+
+                    $h.push('<div>' +
+                        '<img id="img-wrap-' + index + '" data-index="' + index + '" data-base="' + catalog.item['imgUrlBase'] + '" class="img-wrap no-loaded" data-src="' + item + '"/>' +
+                        '</div>');
+                });
+                $body.html($h.join(''));
+                $title.html(catalog.item.title);
+                getImgRs();
+            }
 
             function initPage(id) {
                 $loading.removeClass('hide');
@@ -367,27 +392,28 @@
                     $(".load-rs-wrap").removeClass('hide');
                     $loading.addClass('hide');
                     var data = JSON.parse(res);
-                    curInfo = data;
-                    // console.log(data);
-                    var catalog = data.data;
-
-                    var $h = [];
-                    var len = catalog.img.length;
-                    catalog.img.map((item, index) => {
-
-                        $h.push('<div>' +
-                            '<img id="img-wrap-' + index + '" data-index="' + index + '" data-base="' + catalog.item['imgUrlBase'] + '" class="img-wrap no-loaded" data-src="' + item + '"/>' +
-                            '</div>');
-                    });
-                    $body.html($h.join(''));
-                    $title.html(catalog.item.title);
-                    if (catalog.prev) {
-                        $prev.prop("href", 'zjinfo.html?' + catalog.prev)
-                    }
-                    if (catalog.next) {
-                        $next.prop("href", 'zjinfo.html?' + catalog.next)
-                    }
-                    getImgRs();
+                    curInfo = data.data.data;
+                    // console.log(curInfo);
+                    // var catalog = curZJIndexdata.data.cur];
+                    curZJIndex = data.data.cur;
+                    renderImg();
+                    // var $h = [];
+                    // var len = catalog.img.length;
+                    // catalog.img.map((item, index) => {
+                    //
+                    //     $h.push('<div>' +
+                    //         '<img id="img-wrap-' + index + '" data-index="' + index + '" data-base="' + catalog.item['imgUrlBase'] + '" class="img-wrap no-loaded" data-src="' + item + '"/>' +
+                    //         '</div>');
+                    // });
+                    // $body.html($h.join(''));
+                    // $title.html(catalog.item.title);
+                    // // if (catalog.prev) {
+                    // //     $prev.prop("href", 'zjinfo.html?' + catalog.prev)
+                    // // }
+                    // // if (catalog.next) {
+                    // //     $next.prop("href", 'zjinfo.html?' + catalog.next)
+                    // // }
+                    // getImgRs();
                 })
 
             }
@@ -512,13 +538,11 @@
                 var $this = $(this);
                 var type = $this.data('type') * 1;
                 if (type == 2) {
-                    if (curInfo.data.next) {
-                        initPage(curInfo.data.next);
-                    }
+                    curZJIndex++;
+                    renderImg();
                 } else {
-                    if (curInfo.data.prev) {
-                        initPage(curInfo.data.prev);
-                    }
+                    curZJIndex--;
+                    renderImg();
                 }
             })
             $(".close-wrap").on("click", function () {
