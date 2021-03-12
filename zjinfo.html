@@ -420,6 +420,7 @@
 
             function getImgRs() {
                 let len = $(".img-wrap.no-loaded").length;
+                loadImg= 0;
                 $(".img-wrap.no-loaded").map((index, item) => {
                     // console.log(item, index);
                     let $newNode = $('<div class="load-img-notice">' + (index + 1) + '</div>');
@@ -534,7 +535,7 @@
                 }
             })
             $(".footer-a.fun").on('click', function () {
-                console.log(curIndex);
+                console.log(curZJIndex);
                 var $this = $(this);
                 var type = $this.data('type') * 1;
                 if (type == 2) {

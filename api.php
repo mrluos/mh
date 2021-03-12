@@ -99,9 +99,11 @@ function getZjInfo($id, $cid)
 	$mhList = getZj($id);
 	$info = [];
 	$index = 0;
+	$test = [];
 	foreach ($mhList as $key => $val) {
 		if ($cid == $val['id']) {
 			$index = $key;
+//			$test=$val;
 		}
 		$info[] = getZjInfoHtml($val);
 	}
