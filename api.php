@@ -145,6 +145,11 @@ if ($method !== null) {
 			pclose(popen('start /MIN php' . $phpIni . ' getdata.php 4001', "r"));
 			pclose(popen('start /MIN php' . $phpIni . ' getdata.php 4002', "r"));
 			pclose(popen('start /MIN php' . $phpIni . ' getdata.php 4000', "r"));
+
+			$phpIni ='';
+			pclose(popen('start /MIN php' . $phpIni . ' getdata.php 4001', "r"));
+			pclose(popen('start /MIN php' . $phpIni . ' getdata.php 4002', "r"));
+			pclose(popen('start /MIN php' . $phpIni . ' getdata.php 4000', "r"));
 //			exec('php ' . $phpIni . ' getdata.php 4001', $out);
 //			print_r($out);
 //			exec('php ' . $phpIni . ' getdata.php 4001', $out);
@@ -153,6 +158,8 @@ if ($method !== null) {
 //			print_r($out);
 			break;
 		case 'updateZJ':
+			exec('php ' . $phpIni . ' getdata.php 2002 ' . $id, $out);
+			$phpIni ='';
 			exec('php ' . $phpIni . ' getdata.php 2002 ' . $id, $out);
 			print_r($out);
 			$new = [];

@@ -307,6 +307,50 @@
 			text-decoration: underline;
 			margin-right: 10px;
 		}
+
+		.go-top.reload {
+			bottom: 181px;
+		}
+
+		div#switch-imagesuffix {
+			position: fixed;
+			top: 50%;
+			left: 50%;
+			margin-left: -50px;
+			width: 100px;
+			text-align: center;
+			height: 150px;
+			margin-top: -75px;
+			background: #b12828;
+			color: white;
+		}
+
+		div#switch-imagesuffix ul {
+			list-style: none;
+			margin: 0;
+			padding: 0
+		}
+
+		div#switch-imagesuffix ul > li {
+			padding: 5px;
+			display: block;
+			margin: 4px;
+			border: 1px solid
+
+		}
+
+		.close-switch-panel {
+			position: absolute;
+			right: -19px;
+			background: #b12828;
+			width: 32px;
+			height: 32px;
+			line-height: 32px;
+			border-radius: 50%;
+			font-size: 10px;
+			top: -30px;
+		}
+
 	</style>
 </head>
 <body>
@@ -332,10 +376,22 @@
 		<a class="footer-a fun" id="next" data-type="2" href="#">下一页</a>
 	</div>
 </div>
+<div class="go-top reload">Switch</div>
 <div class="go-top top">Top</div>
 <div class="go-top load"></div>
 <div class="page-loading" id="page-loading">
 	<p>加载中...</p>
+</div>
+<div id="switch-imagesuffix" class="hide">
+	<div>
+		<p class="close-switch-panel">关闭</p>
+		<ul>
+			<li class="switch-item" data-index="0">空</li>
+			<li class="switch-item" data-index="1">jpg</li>
+			<li class="switch-item" data-index="2">png</li>
+			<li class="switch-item" data-index="3">gif</li>
+		</ul>
+	</div>
 </div>
 <script>
     $(function () {
@@ -361,6 +417,59 @@
             var $prev = $("#prev");
             var $next = $("#next");
             var curZJIndex = 0
+            var curSuffix = '';
+            var imageSuffix = ['', '.jpg', '.png', '.gif'];
+
+            function getCurImageSuffix() {
+                return curSuffix;
+            }
+
+            function setCurImageSuffix(_index) {
+                curSuffix = imageSuffix[_index] ? imageSuffix[_index] : '';
+            }
+
+            $(".close-switch-panel").on("click", function () {
+                $("#switch-imagesuffix").addClass('hide');
+            })
+            $(".go-top.reload").on("click", function () {
+                $("#switch-imagesuffix").removeClass('hide');
+            })
+            $(".switch-item").on("click", function () {
+                if (document.getElementById("body").children.length == loadImg || document.getElementById("body").children.length == 0) {
+                    setCurImageSuffix($(this).data('index'))
+                    reRenderImg(getCurImageSuffix())
+                } else {
+                    alert('wait')
+                }
+            })
+
+            function reRenderImg(_suffix = '') {
+                console.log(_suffix);
+
+                if (!curInfo) {
+                    return;
+                }
+                curZJIndex = curZJIndex < 0 ? 0 : curZJIndex
+                if (!curInfo[curZJIndex]) {
+                    return;
+                }
+                var catalog = curInfo[curZJIndex];
+                var $h = [];
+                var len = catalog.img.length;
+                curSuffix = _suffix;
+                catalog.img.map((item, index) => {
+                    item = item.replace(/\/([^\/]+)$/si, '')
+                    item = item + '/' + index + curSuffix;
+                    $h.push('<div>' +
+                        '<img data-id="' + catalog.item.id + '"  id="img-wrap-' + index + '" data-index="' + index + '" data-base="' + catalog.item['imgUrlBase'] + '" class="img-wrap no-loaded" data-src="' + item + '"/>' +
+                        '</div>');
+                });
+                $body.html($h.join(''));
+                $title.html(catalog.item.title);
+                $title.data('id', catalog.item.id);
+                getImgRs();
+
+            }
 
             function renderImg() {
                 if (!curInfo) {
@@ -372,11 +481,12 @@
                 }
                 var catalog = curInfo[curZJIndex];
                 var $h = [];
+                // catalog.img = catalog.img.slice(0, 10);
                 var len = catalog.img.length;
                 catalog.img.map((item, index) => {
-
+                    curSuffix = catalog.item.image_suffix ? catalog.item.image_suffix : '';
                     $h.push('<div>' +
-                        '<img id="img-wrap-' + index + '" data-index="' + index + '" data-base="' + catalog.item['imgUrlBase'] + '" class="img-wrap no-loaded" data-src="' + item + '"/>' +
+                        '<img data-id="' + catalog.item.id + '" id="img-wrap-' + index + '" data-index="' + index + '" data-base="' + catalog.item['imgUrlBase'] + '" class="img-wrap no-loaded" data-src="' + item + '"/>' +
                         '</div>');
                 });
                 $body.html($h.join(''));
@@ -418,32 +528,49 @@
 
             }
 
+            let errorCount = 0
+
             function getImgRs() {
                 let len = $(".img-wrap.no-loaded").length;
-                loadImg= 0;
-                $(".img-wrap.no-loaded").map((index, item) => {
-                    // console.log(item, index);
-                    let $newNode = $('<div class="load-img-notice">' + (index + 1) + '</div>');
-                    $(item).parent().append($newNode);
-                    let url = $(item).data('src');
-                    console.log(item, $(item), $(item).data('src'));
+                loadImg = 0;
+                errorCount = 0;
+                imgCache = [];
+                let curTitle =
+                    $(".img-wrap.no-loaded").map((index, item) => {
+                        // console.log(item, index);
+                        let $newNode = $('<div class="load-img-notice">' + (index + 1) + '</div>');
+                        $(item).parent().append($newNode);
+                        let url = $(item).data('src');
+                        console.log(item, $(item), $(item).data('src'));
 
-                    getOneImg(url, () => {
-                        loadImg++;
-                        console.log(url, 'success');
-                        $loadRat.html(~~(loadImg / len * 100) + '%')
-                        $(item).prop('src', url);
-                        $(item).parent().removeClass('no-loaded');
-                        $newNode.remove();
-                    }, () => {
-                        len--;
-                        $("#img-wrap-" + index).remove();
-                        console.log(url, 'failed', index);
-                        $loadRat.html(~~(loadImg / len * 100) + '%')
-                        $(item).parent().remove();
-                        $newNode.remove();
+                        getOneImg(url, () => {
+                            let id = $title.data('id');
+                            if (id != $("item").data('id')) {
+                                return;
+                            }
+                            loadImg++;
+                            console.log(url, 'success');
+                            $loadRat.html(~~(loadImg / len * 100) + '%')
+                            $(item).prop('src', url);
+                            $(item).parent().removeClass('no-loaded');
+                            $newNode.remove();
+                            console.log(loadImg);
+                        }, () => {
+                            let id = $title.data('id');
+                            if (id != $("item").data('id')) {
+                                return;
+                            }
+                            len--;
+                            errorCount++;
+
+                            console.log(url, 'failed', index);
+                            $loadRat.html(~~(loadImg / len * 100) + '%')
+                            $(item).parent().remove();
+                            $newNode.remove();
+                            $("#img-wrap-" + index).remove();
+                            console.log(errorCount);
+                        })
                     })
-                })
                 return;
 
             }
@@ -475,11 +602,14 @@
                 }
             }
 
+            let imgCache = [];
+
             function getOneImg(_url, _cb, _errorCb) {
                 var i = new Image();
                 i.onload = _cb;
                 i.onerror = _errorCb;
                 i.src = _url;
+                imgCache.push(i);
             }
 
             function cacheChapter(_list) {
@@ -570,8 +700,9 @@
                 var step = 10;
                 last = last * 1;
                 for (var i = last + 1; i < (last * 1 + step); i++) {
-                    var _url = imgurl.replace('@#@', i);
-                    var index = i;
+                    let index = i;
+                    imgurl = imgurl.replace(/\/([^\/]+)$/si, '/')
+                    let _url = imgurl + (index) + getCurImageSuffix();
                     getOneImg(_url, () => {
                         console.log(_url, 'success');
                     }, () => {
