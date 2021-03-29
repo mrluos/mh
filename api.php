@@ -54,7 +54,7 @@ function getZjInfoHtml($info)
 			'image_suffix_check' => 1,
 		], ['id' => $info['id']]);
 	}
-	$imgBase = 'http://www.xiximh.vip/' . $info['dir_str'];
+	$imgBase = 'http://www.xiximh.fun/' . $info['dir_str'];
 	if ($hasLoc) {
 		$num = getFileNumber($locPath);
 		if ($num > 0) {

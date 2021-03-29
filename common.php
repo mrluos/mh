@@ -24,6 +24,9 @@ function gf_http_post($url, $parameters = null, $headers = [], $upwd = '')
  */
 function gf_http_get($url, $parameters = null, $headers = [], $upwd = '')
 {
+	$headers = [
+		'User-Agent:Mozilla/5.0 (Linux; Android 8.0; Pixel 2 Build/OPD3.170816.012) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/89.0.4389.90 Mobile Safari/537.36 Edg/89.0.774.63'
+	];
 	return gf_http($url, 'get', $parameters, $headers, $upwd);
 }
 
@@ -898,17 +901,23 @@ class MH extends DbModel
 	}
 }
 
+
+function getApiHost()
+{
+	return 'http://www.xiximh.fun';
+}
+
 function getPage($page = 1, $type = 1)
 {
 	$db = new MH();
 	if ($type == 1) {
-		$rs = gf_http_get('http://www.xiximh.vip/home/api/getpage/tp/1-vip-' . $page);
+		$rs = gf_http_get(getApiHost() . '/home/api/getpage/tp/1-vip-' . $page);
 	}
 	if ($type == 2) {
-		$rs = gf_http_get('http://www.xiximh.vip/home/api/getpage/tp/1-competitive-' . $page);
+		$rs = gf_http_get(getApiHost() . '/home/api/getpage/tp/1-competitive-' . $page);
 	}
 	if ($type == 3) {
-		$rs = gf_http_get('http://www.xiximh.vip/home/api/getpage/tp/1-newest-' . $page);
+		$rs = gf_http_get(getApiHost() . '/home/api/getpage/tp/1-newest-' . $page);
 	}
 
 
@@ -937,7 +946,7 @@ function getAllZJ()
 	$db = new MH();
 	$all = $db->getAllMH();
 	foreach ($all as $item) {
-		$rs = gf_http_get('http://www.xiximh.vip/home/api/chapter_list/tp/' . $item['id'] . '-1-1-1000');
+		$rs = gf_http_get(getApiHost() . '/home/api/chapter_list/tp/' . $item['id'] . '-1-1-1000');
 
 		$rs = json_decode($rs, true);
 
@@ -992,7 +1001,7 @@ function getAllZJMaxImg()
 				break;
 			}
 			$suffix = $picSuffix[$type];
-			$imgUrl = 'http://www.xiximh.vip/' . $item['dir_str'] . '1' . $suffix;
+			$imgUrl = getApiHost() . '/' . $item['dir_str'] . '1' . $suffix;
 			getimagesize($imgUrl, $rs);
 			if ($rs) {
 				break;
@@ -1002,9 +1011,9 @@ function getAllZJMaxImg()
 		echo ' pic suffix:', $suffix, "\r\n";
 		while ($goOn) {
 
-			$imgUrl = 'http://www.xiximh.vip/' . $item['dir_str'] . $picCount . $suffix;
+			$imgUrl = getApiHost() . '/' . $item['dir_str'] . $picCount . $suffix;
 			getimagesize($imgUrl, $rs);
-//			$rs = file_get_contents('http://www.xiximh.vip/' . $item['dir_str'] . $picCount . $item['image_suffix']);
+//			$rs = file_get_contents(getApiHost().'/' . $item['dir_str'] . $picCount . $item['image_suffix']);
 //			var_dump($imgUrl, $rs);
 			if ($picCount <= $init) {
 				if ($picCount == $init && $rs) {
@@ -1033,7 +1042,7 @@ function getAllZJMaxImg()
 //			exit();
 
 		}
-		$imgUrl = 'http://www.xiximh.vip/' . $item['dir_str'] . $picCount . $suffix;
+		$imgUrl = getApiHost() . '/' . $item['dir_str'] . $picCount . $suffix;
 		getimagesize($imgUrl, $rs);
 		if (!$rs) {
 			$picCount - 1;
@@ -1053,12 +1062,11 @@ function getAllZJEx($id)
 //	print_r($match);
 //	return;
 
-	echo "\r\r get 'http://www.xiximh.vip/home/api/chapter_list/tp/{$id}-1-1-1000' \r\r";
-	$rs = gf_http_get('http://www.xiximh.vip/home/api/chapter_list/tp/' . $id . '-1-1-1000');
+	echo "\r\r get getApiHost().'/home/api/chapter_list/tp/{$id}-1-1-1000' \r\r";
+	$rs = gf_http_get(getApiHost() . '/home/api/chapter_list/tp/' . $id . '-1-1-1000');
 	$db = new MH();
-
 	$rs = json_decode($rs, true);
-
+	var_dump($rs);
 	$list = [];
 	if ($rs['code'] == 1) {
 		$list = $rs['result']['list'];
@@ -1129,7 +1137,7 @@ function getPicCount($item, $suffix = '-1')
 		$suffix = testForImgSuffix($item['image_suffix'], $item['dir_str']);
 	}
 	$testPic = 0;
-	$imgUrl = 'http://www.xiximh.vip/' . $remoteDir . $testPic . $suffix;
+	$imgUrl = getApiHost() . '/' . $remoteDir . $testPic . $suffix;
 	$startIndex = 1;
 	$rs = @file_get_contents($imgUrl);
 	if ($rs) {
@@ -1143,7 +1151,7 @@ function getPicCount($item, $suffix = '-1')
 	$falseFlag = false;
 	$lastV = 0;
 	do {
-		$imgUrl = 'http://www.xiximh.vip/' . $remoteDir . $cur . $suffix;
+		$imgUrl = getApiHost() . '/' . $remoteDir . $cur . $suffix;
 		$rs = @file_get_contents($imgUrl);
 		$count++;
 //		$rs = false;
@@ -1189,7 +1197,7 @@ function testForImgSuffix($locSuffix, $remoteDir = '', $testPic = '2', $isDebug 
 		}
 		$suffix = $picSuffix[$count];
 
-		$imgUrl = 'http://www.xiximh.vip/' . $remoteDir . $testPic . $suffix;
+		$imgUrl = getApiHost() . '/' . $remoteDir . $testPic . $suffix;
 		$rs = @file_get_contents($imgUrl);
 		if ($isDebug) {
 			echo ' suffix test for [' . $suffix, '] ', $imgUrl, ' #----> ', boolval($rs) ? 'true' : 'false', "\r\n";
@@ -1300,7 +1308,7 @@ JOIN mh_zj j ON j.manhua_id = t.id
 		echo ' pic suffix:', $suffix, "\r\n";
 		$picCount = 0;
 		while ($goOn) {
-			$imgUrl = 'http://www.xiximh.vip/' . $item['dir_str'] . $picCount . $suffix;
+			$imgUrl = getApiHost() . '/' . $item['dir_str'] . $picCount . $suffix;
 			echo 'get img ', $imgUrl, "\r\n";
 			$rs = @file_get_contents($imgUrl);
 			if (!$rs) {
